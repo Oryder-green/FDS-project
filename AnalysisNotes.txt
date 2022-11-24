@@ -1,2 +1,4 @@
 Stricter delay definition. More than 15 minutes late. The stricter definition
 of delays (i.e., late > 0) gives...
+
+Use departure delays to predict arrival delays...useful information.
