@@ -2,3 +2,17 @@ Stricter delay definition. More than 15 minutes late. The stricter definition
 of delays (i.e., late > 0) gives...
 
 Use departure delays to predict arrival delays...useful information.
+
+Because departures are US origin, I can obtain weather data for these airports.
+This is not the case for arrivals, since these may be international. I choose
+to omit weather as a predictor in the cause of arrival delays, although this 
+is likely/unlikely an important factor given that landings are more sensitive
+to weather than departures and that weather was/wasn't an important predictor 
+for departures.
+
+Missing data for drier more temperate months which may affect the prediction. 
+Most observations are for periods in which the weather is usually worse, so
+may underestimate the affect of poor weather on departure delays.
+
+Should use data from summer month...also miss out on data for summer months 
+with high passenger numbers.
