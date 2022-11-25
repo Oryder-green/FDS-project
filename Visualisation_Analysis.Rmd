@@ -1,0 +1,43 @@
+---
+title: "Final Project: Predicting US Flight Delays using Flight Characteristics and Weather Data"
+author: "Oliver Ryder-Green"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: 
+    keep_tex: yes
+---
+\clearpage
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm (list = ls())
+library(dplyr)
+library(glmnet)
+library(randomForest)
+library(gbm)
+```
+
+\section{Introduction}
+To paraphrase a well-known idiom, 'nothing is certain but death, taxes, and delayed flights.' Flight delays are an inconvenience that almost all aviation passengers will experience at some point in their travels. Yet the burden of flight delays is not the same for all passengers. In particular, US passengers are not entitled to compensation for delays\footnote{source:www.transportation.gov}. Yet, between 2013 and 2022, approximately one in every five flights from US airports was delayed by at least 15 minutes\footnote{source:www.bts.gov}. With more than 10 million scheduled passenger flights in the US each year\footnote{source:www.faa.gov}, the cost to passengers of flight delays is substantial. Indeed, the \textit{Federal Aviation Administration} estimates that flight delays in the US from 2016 to 2019 cost passengers US\$62.6billion in total. Short of relying on airlines to inform them of expected delays (as late as 30 minutes before scheduled departure), there is little that US passengers can do to reliably avoid flight delays. Therefore, I apply the classification methods discussed in class to determine what factors contribute to flight departure delays for flights within the US. I also use regression methods discussed in class to consider the extent to which these factors are able to predict the length of departure delays that passengers experience.\
+
+
+```{r cars}
+
+#delays by carriers and origin over time.
+
+```
+
+
+Several factors may determine whether or not a flight is delayed and for how long. The relative influence on the probability and length of a delay may differ between factors; for instance, a mechanical issue is likely to cause a longer delay than a high volume of air traffic. The confluence of certain factors may also make delays more likely or lengthy. Moreover, some factors are hard to observe or nearly impossible to predict. The task of anticipating delays is, therefore, extremely difficult for passengers. That said, the data above suggests that some features that are readily observable for passengers, such as the airline carrier, that may be useful in predicting delays.\
+
+
+```{r cars}
+
+```
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+

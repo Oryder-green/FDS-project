@@ -1,0 +1,204 @@
+OP_UNIQUE_CARRIER,Description,Avg(DEP_DELAY_NEW),Year
+9E,Endeavor Air Inc.,10.2782,2010
+AA,American Airlines Inc.,11.274,2010
+AS,Alaska Airlines Inc.,5.8807,2010
+B6,JetBlue Airways,14.3841,2010
+CO,Continental Air Lines Inc.,9.8768,2010
+DL,Delta Air Lines Inc.,12.0537,2010
+EV,ExpressJet Airlines LLC d/b/a aha!,13.6158,2010
+F9,Frontier Airlines Inc.,9.5032,2010
+FL,AirTran Airways Corporation,9.2566,2010
+HA,Hawaiian Airlines Inc.,3.3487,2010
+MQ,Envoy Air,11.1834,2010
+OH,PSA Airlines Inc.,12.3209,2010
+OO,SkyWest Airlines Inc.,10.8133,2010
+UA,United Air Lines Inc.,9.0864,2010
+US,US Airways Inc.,6.8586,2010
+WN,Southwest Airlines Co.,12.237,2010
+XE,ExpressJet Airlines Inc.,11.1753,2010
+YV,Mesa Airlines Inc.,8.4132,2010
+AA,American Airlines Inc.,12.0363,2011
+AS,Alaska Airlines Inc.,5.7201,2011
+B6,JetBlue Airways,15.6234,2011
+CO,Continental Air Lines Inc.,11.4238,2011
+DL,Delta Air Lines Inc.,9.3876,2011
+EV,ExpressJet Airlines LLC d/b/a aha!,15.8038,2011
+F9,Frontier Airlines Inc.,10.8351,2011
+FL,AirTran Airways Corporation,7.9276,2011
+HA,Hawaiian Airlines Inc.,3.5781,2011
+MQ,Envoy Air,11.1104,2011
+OO,SkyWest Airlines Inc.,10.3536,2011
+UA,United Air Lines Inc.,11.383,2011
+US,US Airways Inc.,8.3253,2011
+WN,Southwest Airlines Co.,11.9454,2011
+XE,ExpressJet Airlines Inc.,13.9165,2011
+YV,Mesa Airlines Inc.,8.8595,2011
+AA,American Airlines Inc.,12.478,2012
+AS,Alaska Airlines Inc.,6.4086,2012
+B6,JetBlue Airways,12.8862,2012
+DL,Delta Air Lines Inc.,7.8702,2012
+EV,ExpressJet Airlines LLC d/b/a aha!,15.2371,2012
+F9,Frontier Airlines Inc.,10.9205,2012
+FL,AirTran Airways Corporation,6.2783,2012
+HA,Hawaiian Airlines Inc.,3.5375,2012
+MQ,Envoy Air,9.8806,2012
+OO,SkyWest Airlines Inc.,9.7704,2012
+UA,United Air Lines Inc.,14.467,2012
+US,US Airways Inc.,5.8809,2012
+VX,Virgin America,12.4779,2012
+WN,Southwest Airlines Co.,10.4907,2012
+YV,Mesa Airlines Inc.,7.8481,2012
+9E,Endeavor Air Inc.,10.9691,2013
+AA,American Airlines Inc.,13.4019,2013
+AS,Alaska Airlines Inc.,5.4675,2013
+B6,JetBlue Airways,15.1295,2013
+DL,Delta Air Lines Inc.,9.4003,2013
+EV,ExpressJet Airlines LLC d/b/a aha!,17.0131,2013
+F9,Frontier Airlines Inc.,14.8933,2013
+FL,AirTran Airways Corporation,11.1914,2013
+HA,Hawaiian Airlines Inc.,3.4383,2013
+MQ,Envoy Air,15.1139,2013
+OO,SkyWest Airlines Inc.,10.9908,2013
+UA,United Air Lines Inc.,13.5361,2013
+US,US Airways Inc.,7.7148,2013
+VX,Virgin America,12.9061,2013
+WN,Southwest Airlines Co.,13.3988,2013
+YV,Mesa Airlines Inc.,12.2162,2013
+AA,American Airlines Inc.,13.7885,2014
+AS,Alaska Airlines Inc.,6.4186,2014
+B6,JetBlue Airways,13.491,2014
+DL,Delta Air Lines Inc.,9.5787,2014
+EV,ExpressJet Airlines LLC d/b/a aha!,17.0934,2014
+F9,Frontier Airlines Inc.,14.9489,2014
+FL,AirTran Airways Corporation,10.3099,2014
+HA,Hawaiian Airlines Inc.,3.4574,2014
+MQ,Envoy Air,13.8704,2014
+OO,SkyWest Airlines Inc.,12.2894,2014
+UA,United Air Lines Inc.,15.535,2014
+US,US Airways Inc.,8.3557,2014
+VX,Virgin America,12.3037,2014
+WN,Southwest Airlines Co.,16.0279,2014
+AA,American Airlines Inc.,11.8108,2015
+AS,Alaska Airlines Inc.,6.6006,2015
+B6,JetBlue Airways,14.6065,2015
+DL,Delta Air Lines Inc.,9.6145,2015
+EV,ExpressJet Airlines LLC d/b/a aha!,12.4506,2015
+F9,Frontier Airlines Inc.,17.2129,2015
+HA,Hawaiian Airlines Inc.,4.458,2015
+MQ,Envoy Air,13.4307,2015
+NK,Spirit Air Lines,18.9147,2015
+OO,SkyWest Airlines Inc.,11.6151,2015
+UA,United Air Lines Inc.,16.4151,2015
+US,US Airways Inc.,9.1525,2015
+VX,Virgin America,11.5346,2015
+WN,Southwest Airlines Co.,12.2594,2015
+AA,American Airlines Inc.,12.0069,2016
+AS,Alaska Airlines Inc.,5.7996,2016
+B6,JetBlue Airways,16.3792,2016
+DL,Delta Air Lines Inc.,10.3424,2016
+EV,ExpressJet Airlines LLC d/b/a aha!,13.7451,2016
+F9,Frontier Airlines Inc.,16.8845,2016
+HA,Hawaiian Airlines Inc.,3.9707,2016
+NK,Spirit Air Lines,15.9706,2016
+OO,SkyWest Airlines Inc.,11.675,2016
+UA,United Air Lines Inc.,14.0041,2016
+VX,Virgin America,13.5704,2016
+WN,Southwest Airlines Co.,10.8158,2016
+AA,American Airlines Inc.,11.3163,2017
+AS,Alaska Airlines Inc.,7.7612,2017
+B6,JetBlue Airways,20.3337,2017
+DL,Delta Air Lines Inc.,11.116,2017
+EV,ExpressJet Airlines LLC d/b/a aha!,17.0527,2017
+F9,Frontier Airlines Inc.,15.6175,2017
+HA,Hawaiian Airlines Inc.,5.1537,2017
+NK,Spirit Air Lines,14.6122,2017
+OO,SkyWest Airlines Inc.,14.7051,2017
+UA,United Air Lines Inc.,12.9016,2017
+VX,Virgin America,16.395,2017
+WN,Southwest Airlines Co.,11.8456,2017
+9E,Endeavor Air Inc.,13.8693,2018
+AA,American Airlines Inc.,13.0694,2018
+AS,Alaska Airlines Inc.,7.834,2018
+B6,JetBlue Airways,19.6704,2018
+DL,Delta Air Lines Inc.,10.1566,2018
+EV,ExpressJet Airlines LLC d/b/a aha!,16.5266,2018
+F9,Frontier Airlines Inc.,23.0299,2018
+G4,Allegiant Air,17.0809,2018
+HA,Hawaiian Airlines Inc.,5.0112,2018
+MQ,Envoy Air,10.9007,2018
+NK,Spirit Air Lines,13.6668,2018
+OH,PSA Airlines Inc.,12.7608,2018
+OO,SkyWest Airlines Inc.,14.4687,2018
+UA,United Air Lines Inc.,13.6145,2018
+VX,Virgin America,10.9022,2018
+WN,Southwest Airlines Co.,12.5982,2018
+YV,Mesa Airlines Inc.,15.1258,2018
+YX,Republic Airline,11.9552,2018
+9E,Endeavor Air Inc.,14.3486,2019
+AA,American Airlines Inc.,14.8955,2019
+AS,Alaska Airlines Inc.,9.8346,2019
+B6,JetBlue Airways,21.8547,2019
+DL,Delta Air Lines Inc.,10.8566,2019
+EV,ExpressJet Airlines LLC d/b/a aha!,21.6447,2019
+F9,Frontier Airlines Inc.,18.826,2019
+G4,Allegiant Air,14.6784,2019
+HA,Hawaiian Airlines Inc.,5.0362,2019
+MQ,Envoy Air,13.0671,2019
+NK,Spirit Air Lines,14.2215,2019
+OH,PSA Airlines Inc.,14.4229,2019
+OO,SkyWest Airlines Inc.,16.3883,2019
+UA,United Air Lines Inc.,16.4674,2019
+WN,Southwest Airlines Co.,11.7937,2019
+YV,Mesa Airlines Inc.,17.4426,2019
+YX,Republic Airline,12.782,2019
+9E,Endeavor Air Inc.,5.6258,2020
+AA,American Airlines Inc.,7.6244,2020
+AS,Alaska Airlines Inc.,5.8183,2020
+B6,JetBlue Airways,8.2138,2020
+DL,Delta Air Lines Inc.,5.5816,2020
+EV,ExpressJet Airlines LLC d/b/a aha!,6.3445,2020
+F9,Frontier Airlines Inc.,7.398,2020
+G4,Allegiant Air,12.8255,2020
+HA,Hawaiian Airlines Inc.,3.592,2020
+MQ,Envoy Air,6.6704,2020
+NK,Spirit Air Lines,7.8098,2020
+OH,PSA Airlines Inc.,10.0647,2020
+OO,SkyWest Airlines Inc.,8.672,2020
+UA,United Air Lines Inc.,6.9254,2020
+WN,Southwest Airlines Co.,4.1163,2020
+YV,Mesa Airlines Inc.,9.6627,2020
+YX,Republic Airline,5.2228,2020
+9E,Endeavor Air Inc.,6.5005,2021
+AA,American Airlines Inc.,14.527,2021
+AS,Alaska Airlines Inc.,8.575,2021
+B6,JetBlue Airways,20.3116,2021
+DL,Delta Air Lines Inc.,8.8526,2021
+F9,Frontier Airlines Inc.,15.9548,2021
+G4,Allegiant Air,19.6341,2021
+HA,Hawaiian Airlines Inc.,5.219,2021
+MQ,Envoy Air,9.9633,2021
+NK,Spirit Air Lines,14.4622,2021
+OH,PSA Airlines Inc.,10.4273,2021
+OO,SkyWest Airlines Inc.,13.9297,2021
+QX,Horizon Air,7.0071,2021
+UA,United Air Lines Inc.,12.1964,2021
+WN,Southwest Airlines Co.,14.8021,2021
+YV,Mesa Airlines Inc.,18.0537,2021
+YX,Republic Airline,9.4301,2021
+9E,Endeavor Air Inc.,13.303,2022
+AA,American Airlines Inc.,18.06,2022
+AS,Alaska Airlines Inc.,10.054,2022
+B6,JetBlue Airways,28.7694,2022
+DL,Delta Air Lines Inc.,13.727,2022
+F9,Frontier Airlines Inc.,23.6834,2022
+G4,Allegiant Air,22.5645,2022
+HA,Hawaiian Airlines Inc.,9.2084,2022
+MQ,Envoy Air,10.4899,2022
+NK,Spirit Air Lines,17.6937,2022
+OH,PSA Airlines Inc.,16.5425,2022
+OO,SkyWest Airlines Inc.,14.7807,2022
+QX,Horizon Air,8.525,2022
+UA,United Air Lines Inc.,16.575,2022
+WN,Southwest Airlines Co.,16.6188,2022
+YV,Mesa Airlines Inc.,19.6602,2022
+YX,Republic Airline,14.6049,2022
