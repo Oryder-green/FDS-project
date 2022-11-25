@@ -16,3 +16,5 @@ may underestimate the affect of poor weather on departure delays.
 
 Should use data from summer month...also miss out on data for summer months 
 with high passenger numbers.
+
+Robustness check. Rerun on the best models when excluding imputed precipitation.
