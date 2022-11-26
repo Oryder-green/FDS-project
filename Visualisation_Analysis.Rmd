@@ -9,35 +9,177 @@ output:
 \clearpage
 
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#install.packages('ggplot2')
 rm (list = ls())
 library(dplyr)
+library(scales)
 library(glmnet)
 library(randomForest)
 library(gbm)
+library(ggplot2)
+library(tidyr)
 ```
 
 \section{Introduction}
-To paraphrase a well-known idiom, 'nothing is certain but death, taxes, and delayed flights.' Flight delays are an inconvenience that almost all aviation passengers will experience at some point in their travels. Yet the burden of flight delays is not the same for all passengers. In particular, US passengers are not entitled to compensation for delays\footnote{source:www.transportation.gov}. Yet, between 2013 and 2022, approximately one in every five flights from US airports was delayed by at least 15 minutes\footnote{source:www.bts.gov}. With more than 10 million scheduled passenger flights in the US each year\footnote{source:www.faa.gov}, the cost to passengers of flight delays is substantial. Indeed, the \textit{Federal Aviation Administration} estimates that flight delays in the US from 2016 to 2019 cost passengers US\$62.6billion in total. Short of relying on airlines to inform them of expected delays (as late as 30 minutes before scheduled departure), there is little that US passengers can do to reliably avoid flight delays. Therefore, I apply the classification methods discussed in class to determine what factors contribute to flight departure delays for flights within the US. I also use regression methods discussed in class to consider the extent to which these factors are able to predict the length of departure delays that passengers experience.\
+To paraphrase a well-known idiom, 'nothing is certain but death, taxes, and delayed flights.' Flight delays are an inconvenience that almost all aviation passengers will experience at some point in their travels. Yet the burden of flight delays is not the same for all passengers. In particular, US passengers are not entitled to compensation for delays\footnote{source:www.transportation.gov}. Yet, between 2013 and 2022, approximately one in every five flights from US airports was delayed by at least 15 minutes\footnote{source:www.bts.gov}. With more than 10 million scheduled passenger flights in the US each year\footnote{source:www.faa.gov}, the cost to passengers of flight delays is substantial. Indeed, the \textit{Federal Aviation Administration} estimates that flight delays in the US from 2016 to 2019 cost passengers US\$62.6billion in total. Short of relying on airlines to inform them of expected delays, there is little that US passengers can do to reliably avoid flight delays. Therefore, I apply the classification methods discussed in class to determine which factors best inform flight departure delays for domestic flights in the US. I also use regression methods discussed in class to consider the extent to which these factors are able to predict the length of departure delays that passengers experience.\
 
 
+```{r % flight delays for US carriers, echo=FALSE, include=FALSE, warning=FALSE}
+
+data <- read.csv('https://github.com/Oryder-green/FDS-project/blob/main/CARRIER_SUM_FLIGHT.csv?raw=true')
+
+sums <- aggregate(data$Sum.FLIGHTS., list(data$OP_UNIQUE_CARRIER), FUN=sum) 
+
+x<-sort(sums$x, decreasing=TRUE, index.return=TRUE)$ix[1:8]
+
+top8carriers <- sums$Group.1[c(x)]
+
+data <- read.csv('https://github.com/Oryder-green/FDS-project/blob/main/CARRIER_PCT_ONTIME.csv?raw=true')
+
+colnames(data)[3] <- '% Delayed'
+
+data[, '% Delayed']=100-data[, '% Delayed']
+
+averages <- aggregate(data$`% Delayed`, list(data$Year), FUN=mean)
+
+colnames(averages)[1] <- 'Year'
+colnames(averages)[2] <- 'Avg. % Delayed'
+
+data$`% Delayed` <- as.numeric(data$`% Delayed`)
+data$Year <- as.numeric(data$Year)
+
+pc_data <- data[data$OP_UNIQUE_CARRIER %in% top8carriers, ]
+
+pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'AA'] <- 'American Airlines'
+pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'B6'] <- 'JetBlue Airways'
+pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'DL'] <- 'Delta Airlines'
+pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'EV'] <- 'ExpressJet Airlines'
+pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'MQ'] <- 'Envoy Airlines'
+pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'OO'] <- 'SkyWest Airlines'
+pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'UA'] <- 'United Airlines'
+pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'WN'] <- 'SouthWest Airlines'
+
+pot_carrier_plt <- ggplot(pc_data, aes(x=`Year`, y=`% Delayed`, color=`OP_UNIQUE_CARRIER`)) + geom_line() + scale_x_continuous(limits = c(2010, 2022), breaks = pretty_breaks()) + scale_y_continuous(limits = c(10, 40), breaks = pretty_breaks()) + geom_point(averages, mapping=aes(x=`Year`, y=`Avg. % Delayed`), shape=15, size=2, color="black")
+
+plt_1 <-pot_carrier_plt+labs(x="Year",y="% Flights Delayed",
+               title="Percentage Flight Delays, US Carriers", color = "Top 8 US Carriers") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5)) + annotate("text", x=2012.2, y=38.75, label='Mean (All Carriers)', size = 4) + geom_point(x=2010.05, y=38.75, shape=15, size=2, color="black")
+
+```
+<br>
+Data from the \textit{Bureau of Transportation Statistics} illustrates the prevalence of domestic flight delays. Among all US carriers, between 15--25% of departures were delayed from 2010 to 2022. Among the top US carriers\footnote{as measured by total number of flights serviced in 2010--2022.}, the proportion of delayed flights is persistently higher than average. Evidently, some US carriers exhibit fewer than average flight delays (e.g., Delta Airlines), but top US carriers tend to demonstrate more frequent flight delays than the industry as a whole.  
+
+```{r pot_carrier_plt, echo=FALSE, fig.align='center'}
+#plt_1
+```
+<br>
+<br>
+```{r Average Flight Delay Length for US Carriers, echo=FALSE, include=FALSE, warning=FALSE}
+
+data <- read.csv('https://github.com/Oryder-green/FDS-project/blob/main/CARRIER_AVG_DELAY.csv?raw=true')
+
+colnames(data)[3] <- 'Average Delay (minutes)'
+
+data$`Average Delay (minutes)` <- as.numeric(data$`Average Delay (minutes)`)
+data$Year <- as.numeric(data$Year)
+
+averages <- aggregate(data$`Average Delay (minutes)`, list(data$Year), FUN=mean)
+
+colnames(averages)[1] <- 'Year'
+colnames(averages)[2] <- 'Avg. Average Delay (minutes)'
+
+avg_data <- data[data$OP_UNIQUE_CARRIER %in% top8carriers, ]
+
+avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'AA'] <- 'American Airlines'
+avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'B6'] <- 'JetBlue Airways'
+avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'DL'] <- 'Delta Airlines'
+avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'EV'] <- 'ExpressJet Airlines'
+avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'MQ'] <- 'Envoy Airlines'
+avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'OO'] <- 'SkyWest Airlines'
+avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'UA'] <- 'United Airlines'
+avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'WN'] <- 'SouthWest Airlines'
+
+pot_carrier_plt <- ggplot(avg_data, aes(x=`Year`, y=`Average Delay (minutes)`, color=`OP_UNIQUE_CARRIER`)) + geom_line() + scale_x_continuous(limits = c(2010, 2022), breaks = pretty_breaks()) + scale_y_continuous(limits = c(0, 30), breaks = pretty_breaks()) + geom_point(averages, mapping=aes(x=`Year`, y=`Avg. Average Delay (minutes)`), shape=15, size=2, color="black")
+
+plt_2 <-pot_carrier_plt+labs(x="Year",y="Average Delay (minutes)",
+               title="Average Flight Delays, US Carriers", color = "Top 8 US Carriers") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5)) + annotate("text", x=2012.2, y=28.75, label='Mean (All Carriers)', size = 4) + geom_point(x=2010.05, y=28.75, shape=15, size=2, color="black")
+
+```
+<br>
+For US passengers, the fact that top US carriers experience more frequent departure delays may be of interest in trying to avoid delays. That said, more frequent delays at top airlines do not necessarily imply more severe (i.e., costly) delays for passengers. The \textit{Bureau of Transportation Statistics} data shows that, among all US carriers, mean departure delay lengths were between 7 and 17 minutes on average from 2010 to 2022. Unfortunately, top US carriers again appear to perform worse than the industry as a whole. Without exception, top US carriers exhibit longer-than-average delays at some point in the period. 
+
+```{r avg_carrier_plt, echo=FALSE, fig.align='center'}
+#plt_2
+
+```
+<br>
+<br>
+```{r % flight delays by origin airport, echo=FALSE, warning=FALSE}
+
+data <- read.csv('https://github.com/Oryder-green/FDS-project/blob/main/ORIGIN_PCT_ONTIME.csv?raw=true')
+
+colnames(data)[3] <- '% Delayed'
+
+data <- data %>% drop_na()
+
+data[, '% Delayed']=100-data[, '% Delayed']
+
+
+#remove delay outliers using z-scores
+
+data$z_scores <- abs(data$`% Delayed`-mean(data$`% Delayed`))/sd(data$`% Delayed`)
+
+#remove observations for z > 5
+
+data <- data[data$z_scores <= 5, ]
+
+data$`% Delayed` <- as.numeric(data$`% Delayed`)
+data$Year <- as.numeric(data$Year)
+
+pot_origin_plt <- ggplot(data, aes(x=`Year`, y=`% Delayed`, color=`ORIGIN`)) + geom_jitter() + scale_x_continuous(limits = c(2010, 2022), breaks = pretty_breaks()) + scale_y_continuous(limits = c(0, 60), breaks = pretty_breaks())
+
+plt_3 <-pot_origin_plt+labs(x="Year",y="% Flights Delayed",
+                             title="Percentage Flight Delays, Origin Airports") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5), legend.position = 'none') + stat_summary(fun.y=mean, geom="point", shape=15, size=2, color="black") + annotate("text", x=2011.65, y=57.5, label='Mean (All Airports)', size = 4) + geom_point(x=2010.05, y=57.5, shape=15, size=2, color="black")
+```
+<br>
+The \textit{Bureau of Transportation Statistics} data also highlights that the frequency of delays varies by origin airport. In line with the above, around one in every five flights from a US airport is delayed. There are clearly some airports that persistently experience more frequent delays, over 50% of all flights in some cases, and some airports that experience few or no delays.
+<br>
+```{r pot_airport_plt, echo=FALSE, fig.align='center', warning=FALSE}
+#plt_3
+```
+<br>
+
+Several factors may determine whether or not a flight is delayed and for how long. The confluence of certain factors may also make delays more likely or lengthy. Moreover, some factors are hard to observe or nearly impossible to predict. The task of anticipating delays is, therefore, extremely difficult for passengers. That said, the data above suggests that some features that are readily observable for passengers may be useful in avoiding delays. If passengers face a choice of carriers and origin airports, they may be better able to avoid costly delays by choosing those that feature less frequent and shorter delays. The aim of this analysis is to identify factors that passengers might use to anticipate delays.
+
+\section{Data}
+
+To identify factors that inform whether a flight is delayed on departure and for how long, I use data from the \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/} for January, March, September, and December in 2016, 2017, and 2018, respectively. The flight data contains 8777 observations on US domestic flights and 22 features, such as the flight date, origin airport, carrier, destination, distance, and other flight level characteristics. I combine this data with weather data from \textit{Weather Underground}\footnote{www.wunderground.com}. The weather data contains weather observations, such as average temperature, precipitation, and maximum wind speed, from corresponding airport weather stations on flight departure dates. The merged dataset contains 2687 observations and 28 features. 
+
+\subsection{Compiling and Cleaning}
+
+\subsubsection{Flight Data}
+
+I manually download \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data} for January, March, September, and December in 2016, 2017, and 2018, respectively. I import the data and compile using Pandas in Python (see corresponding Jupyter NB). The resulting dataset has 5,851,068 observations and 22 features. To make the dataset manageable, I draw a random subset (fraction=0.0015) from each month-year sample. The resulting dataset contains 8777 observations.
+
+\subsubsection{Weather Data}
+
+I use web-scraping methods in Python (see corresponding Jupyter NB) to acquire historical weather data from \textit{Weather Underground}. I use airport codes corresponding to origin airports for departures in the flight data to scrape historical weather data from airport weather stations. I acquire observations on temperatures, precipitation, sea level pressure, and max wind speed on the date of departure. The resulting dataset contains 6190 observations.
+
+\subsubsection{Merged Data}
+I merge the flight and weather data on the date of departure and origin airport code. For the flight data, delays are identified as any flight departing more than 15 minutes late: \texttt{DepDel15=1} if delayed and \texttt{DepDel15=0} if otherwise. Delays measured in minutes are given by \texttt{DepDelay}. Since the supervised learning methods I utilise rely on the assumption that \textbf{target variables} do not have missing values, I drop observations if both \texttt{DepDel15} and \texttt{DepDelay} are missing because such observations contain no useful information for the analysis. Since I am interested in predicting delays and delay lengths using flight characteristics and weather observations, I consider the proportion of missing values for these predictor variables. I find that there are no missing observations in the flight data. However, around 70\% of observations have missing values for \texttt{Day Average Temp}, \texttt{High Temp}, \texttt{Low Temp}, \texttt{Max Wind Speed}, and \texttt{Sea Level Pressure} (see Jupyter NB). Moreover, around 90\% of observations have missing values for \texttt{Precipitation}. 
+
+For the merged dataset, 
+
+\subsection{Feature Engineering}
 ```{r cars}
-
-#delays by carriers and origin over time.
 
 ```
 
-
-Several factors may determine whether or not a flight is delayed and for how long. The relative influence on the probability and length of a delay may differ between factors; for instance, a mechanical issue is likely to cause a longer delay than a high volume of air traffic. The confluence of certain factors may also make delays more likely or lengthy. Moreover, some factors are hard to observe or nearly impossible to predict. The task of anticipating delays is, therefore, extremely difficult for passengers. That said, the data above suggests that some features that are readily observable for passengers, such as the airline carrier, that may be useful in predicting delays.\
-
-
-```{r cars}
-
-```
+\subsection{Summary}
 
 
-```{r pressure, echo=FALSE}
+```{r summary, echo=FALSE}
 plot(pressure)
 ```
 

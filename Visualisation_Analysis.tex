@@ -58,15 +58,15 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
-  pdftitle={Final Project: Predicting Flight Delays using Flight Characteristics and Weather Data},
+  pdftitle={Final Project: Predicting US Flight Delays using Flight Characteristics and Weather Data},
   pdfauthor={Oliver Ryder-Green},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 
-\title{Final Project: Predicting Flight Delays using Flight
+\title{Final Project: Predicting US Flight Delays using Flight
 Characteristics and Weather Data}
 \author{Oliver Ryder-Green}
-\date{2022-11-25}
+\date{2022-11-26}
 
 \begin{document}
 \maketitle
@@ -87,15 +87,114 @@ than 10 million scheduled passenger flights in the US each
 year\footnote{source:www.faa.gov}, the cost to passengers of flight
 delays is substantial. Indeed, the
 \textit{Federal Aviation Administration} estimates that flight delays in
-the US from 2016 to 2019 cost US\$62.6billion in total. Short of relying
-on airlines to inform them of expected delays (as late as 30 minutes
-before scheduled departure), there is little that US passengers can do
-to reliably avoid flight delays. Therefore, I apply the classification
-methods discussed in class to determine what factors passengers might
-consider to avoid flight departure delays. I also consider the extent to
-which these factors are able to predict the length of departure delays
-that passengers might experience.\\
+the US from 2016 to 2019 cost passengers US\$62.6billion in total. Short
+of relying on airlines to inform them of expected delays, there is
+little that US passengers can do to reliably avoid flight delays.
+Therefore, I apply the classification methods discussed in class to
+determine which factors best inform flight departure delays for domestic
+flights in the US. I also use regression methods discussed in class to
+consider the extent to which these factors are able to predict the
+length of departure delays that passengers experience.\\
 
-\includegraphics{Visualisation_Analysis_files/figure-latex/pressure-1.pdf}
+Data from the \textit{Bureau of Transportation Statistics} illustrates
+the prevalence of domestic flight delays. Among all US carriers, between
+15--25\% of departures were delayed from 2010 to 2022. Among the top US
+carriers\footnote{as measured by total number of flights serviced in 2010--2022.},
+the proportion of delayed flights is persistently higher than average.
+Evidently, some US carriers exhibit fewer than average flight delays
+(e.g., Delta Airlines), but top US carriers tend to demonstrate more
+frequent flight delays than the industry as a whole.
+
+For US passengers, the fact that top US carriers experience more
+frequent departure delays may be of interest in trying to avoid delays.
+That said, more frequent delays at top airlines do not necessarily imply
+more severe (i.e., costly) delays for passengers. The
+\textit{Bureau of Transportation Statistics} data shows that, among all
+US carriers, mean departure delay lengths were between 7 and 17 minutes
+on average from 2010 to 2022. Unfortunately, top US carriers again
+appear to perform worse than the industry as a whole. Without exception,
+top US carriers exhibit longer-than-average delays at some point in the
+period.
+
+The \textit{Bureau of Transportation Statistics} data also highlights
+that the frequency of delays varies by origin airport. In line with the
+above, around one in every five flights from a US airport is delayed.
+There are clearly some airports that persistently experience more
+frequent delays, over 50\% of all flights in some cases, and some
+airports that experience few or no delays.
+
+Several factors may determine whether or not a flight is delayed and for
+how long. The confluence of certain factors may also make delays more
+likely or lengthy. Moreover, some factors are hard to observe or nearly
+impossible to predict. The task of anticipating delays is, therefore,
+extremely difficult for passengers. That said, the data above suggests
+that some features that are readily observable for passengers may be
+useful in avoiding delays. If passengers face a choice of carriers and
+origin airports, they may be better able to avoid costly delays by
+choosing those that feature less frequent and shorter delays. The aim of
+this analysis is to identify factors that passengers might use to
+anticipate delays.
+
+\section{Data}
+
+To identify factors that inform whether a flight is delayed on departure
+and for how long, I use data from the
+\textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/}
+for January, March, September, and December in 2016, 2017, and 2018,
+respectively. The flight data contains 8777 observations on US domestic
+flights and 24 features, such as the flight date, origin airport,
+carrier, destination, distance, and other flight level characteristics.
+I combine this data with weather data from
+\textit{Weather Underground}\footnote{www.wunderground.com}. The weather
+data contains weather observations, such as average temperature,
+precipitation, and maximum wind speed, from corresponding airport
+weather stations on flight departure dates. The merged dataset contains
+2687 observations and 30 features.
+
+\subsection{Compiling and Cleaning}
+
+\subsubsection{Flight Data}
+
+I manually download
+\textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}
+for January, March, September, and December in 2016, 2017, and 2018,
+respectively. I import the data and compile using Pandas in Python (see
+corresponding Jupyter NB). The resulting dataset has 5,851,068
+observations and 24 features. To make the dataset manageable, I draw a
+random subset (fraction=0.0015) from each month-year sample. The
+resulting dataset contains 8777 observations.
+
+\subsubsection{Weather Data}
+
+I use web-scraping methods in Python (see corresponding Jupyter NB) to
+acquire historical weather data from \textit{Weather Underground}. I use
+airport codes corresponding to origin airports for departures in the
+flight data to scrape historical weather data from airport weather
+stations. I acquire observations on temperatures, precipitation, sea
+level pressure, and max wind speed on the date of departure. The
+resulting dataset contains 6190 observations.
+
+\subsubsection{Merged Data}
+
+I merge the flight and weather data on the date of departure and origin
+airport code. For the flight data, delays are identified as any flight
+departing more than 15 minutes late: \texttt{DepDel15=1} if delayed and
+\texttt{DepDel15=0} if otherwise. Delays measured in minutes are given
+by \texttt{DepDelay}. Since the supervised learning methods I utilise
+rely on the assumption that \textbf{target variables} do not have
+missing values, I drop observations if both \texttt{DepDel15} and
+\texttt{DepDelay} are missing because such observations contain no
+useful information for the analysis. Since I am interested in predicting
+delays and delay lengths using flight characteristics and weather
+observations, I consider the proportion of missing values for these
+predictor variables.
+
+For the merged dataset,
+
+\subsection{Feature Engineering}
+
+\subsection{Summary}
+
+\includegraphics{Visualisation_Analysis_files/figure-latex/summary-1.pdf}
 
 \end{document}
