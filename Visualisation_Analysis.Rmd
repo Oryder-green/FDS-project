@@ -155,13 +155,13 @@ Several factors may determine whether or not a flight is delayed and for how lon
 \newpage 
 \section{Data}
 
-To identify factors that inform whether a flight is delayed on departure and for how long, I use data from the \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/} for January, March, September, and December in 2016, 2017, and 2018, respectively. The flight data contains 8777 observations on US domestic flights and 20 features, such as the flight date, origin airport, carrier, destination, distance, and other flight level characteristics. I combine this data with weather data from \textit{Weather Underground}\footnote{www.wunderground.com}. The weather data contains weather observations, such as average temperature, precipitation, and maximum wind speed, from corresponding airport weather stations on flight departure dates.
+To identify factors that inform whether a flight is delayed on departure and for how long, I use data from the \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/} for January, March, September, and December in 2016, 2017, and 2018, respectively. The flight data contains 8777 observations on US domestic flights and 21 features, such as the flight date, origin airport, carrier, destination, distance, and other flight level characteristics. I combine this data with weather data from \textit{Weather Underground}\footnote{www.wunderground.com}. The weather data contains weather observations, such as average temperature, precipitation, and maximum wind speed, from corresponding airport weather stations on flight departure dates.
 
 \subsection{Compiling and Cleaning}
 
 \subsubsection{Flight Data}
 
-I manually download \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data} for January, March, September, and December in 2016, 2017, and 2018, respectively. I import the data and compile using Pandas in Python (see corresponding Jupyter NB). The resulting dataset has 5,851,068 observations and 20 features. To make the dataset manageable, I draw a random subset (fraction=0.0015) from each month-year sample. The resulting dataset contains 8777 observations.
+I manually download \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data} for January, March, September, and December in 2016, 2017, and 2018, respectively. I import the data and compile using Pandas in Python (see corresponding Jupyter NB). The resulting dataset has 5,851,068 observations and 21 features. To make the dataset manageable, I draw a random subset (fraction=0.0015) from each month-year sample. The resulting dataset contains 8777 observations.
 
 \subsubsection{Weather Data}
 
@@ -175,7 +175,7 @@ Since I am interested in predicting delays and delay lengths using flight charac
 
 \subsection{Feature Engineering}
 
-There is structure in the data that may be useful to exploit. For instance, the data already splits flight dates into \texttt{Month}, \texttt{DayofMonth}, and \texttt{DayofWeek}, which may be relevant in predicting flight delays if, for example, weekend flights are more prone to delays. In a similar vein, I re-code \texttt{DepTimeBlk}, which gives the astronomical time interval in which a departure is scheduled, as a factor variable to be used in prediction. I likewise re-code \texttt{ArrTimeBlk}. 
+There is structure in the data that may be useful to exploit. For instance, the data already splits flight dates into \texttt{Month}, \texttt{DayofMonth}, and \texttt{DayofWeek}, which may be relevant in predicting flight delays if, for example, weekend flights are more prone to delays. In a similar vein, I re-code \texttt{DepTimeBlk}, which gives the astronomical time interval in which a departure is scheduled, as a factor variable to be used in prediction. I likewise re-code \texttt{ArrTimeBlk}. The variables \texttt{CRSDepTimeBlk}
 
 ```{r feature engineering}
 rm (list = ls())
