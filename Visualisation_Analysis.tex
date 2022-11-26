@@ -135,6 +135,7 @@ choosing those that feature less frequent and shorter delays. The aim of
 this analysis is to identify factors that passengers might use to
 anticipate delays.
 
+\newpage 
 \section{Data}
 
 To identify factors that inform whether a flight is delayed on departure
@@ -142,14 +143,14 @@ and for how long, I use data from the
 \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/}
 for January, March, September, and December in 2016, 2017, and 2018,
 respectively. The flight data contains 8777 observations on US domestic
-flights and 24 features, such as the flight date, origin airport,
+flights and 22 features, such as the flight date, origin airport,
 carrier, destination, distance, and other flight level characteristics.
 I combine this data with weather data from
 \textit{Weather Underground}\footnote{www.wunderground.com}. The weather
 data contains weather observations, such as average temperature,
 precipitation, and maximum wind speed, from corresponding airport
 weather stations on flight departure dates. The merged dataset contains
-2687 observations and 30 features.
+2687 observations and 28 features.
 
 \subsection{Compiling and Cleaning}
 
@@ -160,7 +161,7 @@ I manually download
 for January, March, September, and December in 2016, 2017, and 2018,
 respectively. I import the data and compile using Pandas in Python (see
 corresponding Jupyter NB). The resulting dataset has 5,851,068
-observations and 24 features. To make the dataset manageable, I draw a
+observations and 22 features. To make the dataset manageable, I draw a
 random subset (fraction=0.0015) from each month-year sample. The
 resulting dataset contains 8777 observations.
 
@@ -184,12 +185,23 @@ by \texttt{DepDelay}. Since the supervised learning methods I utilise
 rely on the assumption that \textbf{target variables} do not have
 missing values, I drop observations if both \texttt{DepDel15} and
 \texttt{DepDelay} are missing because such observations contain no
-useful information for the analysis. Since I am interested in predicting
-delays and delay lengths using flight characteristics and weather
-observations, I consider the proportion of missing values for these
-predictor variables.
+useful information for the analysis.
 
-For the merged dataset,
+Since I am interested in predicting delays and delay lengths using
+flight characteristics and weather observations, I consider the
+proportion of missing values for these predictor variables. I find that
+there are no missing observations in the flight data. However, around
+70\% of observations have missing values for \texttt{Day Average Temp},
+\texttt{High Temp}, \texttt{Low Temp}, \texttt{Max Wind Speed}, and
+\texttt{Sea Level Pressure} (see Jupyter NB). Moreover, around 90\% of
+observations have missing values for \texttt{Precipitation}. Dropping
+observations missing weather data is costly in terms of observations.
+Yet, the weather data is of interest in prediction and is likely
+independent of many flight characteristics. I choose to omit
+observations that have missing values for \texttt{Day Average Temp},
+\texttt{High Temp}, \texttt{Low Temp}, \texttt{Max Wind Speed}, and
+\texttt{Sea Level Pressure}. Further omitting observations that have
+missing values for precipitation is very costly.
 
 \subsection{Feature Engineering}
 
