@@ -12,6 +12,11 @@ output:
 ```{r setup, include=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #install.packages('ggplot2')
+#install.packages('stringr')
+#install.packages('devtools')
+#install.packages('ggpubr')
+#install.packages('pROC')
+#install.packages('repr')
 rm (list = ls())
 library(dplyr)
 library(scales)
@@ -20,10 +25,20 @@ library(randomForest)
 library(gbm)
 library(ggplot2)
 library(tidyr)
+library(stringr)
+library(devtools)
+install_github("psyteachr/introdataviz")
+library(introdataviz)
+library(reshape2)
+library(ggpubr)
+library(pROC)
+library(repr)
+library(caret)
+library(xtable)
 ```
 
 \section{Introduction}
-To paraphrase a well-known idiom, 'nothing is certain but death, taxes, and delayed flights.' Flight delays are an inconvenience that almost all aviation passengers will experience at some point in their travels. Yet the burden of flight delays is not the same for all passengers. In particular, US passengers are not entitled to compensation for delays\footnote{source:www.transportation.gov}. Yet, between 2013 and 2022, approximately one in every five flights from US airports was delayed by at least 15 minutes\footnote{source:www.bts.gov}. With more than 10 million scheduled passenger flights in the US each year\footnote{source:www.faa.gov}, the cost to passengers of flight delays is substantial. Indeed, the \textit{Federal Aviation Administration} estimates that flight delays in the US from 2016 to 2019 cost passengers US\$62.6billion in total. Short of relying on airlines to inform them of expected delays, there is little that US passengers can do to reliably avoid flight delays. Therefore, I apply the classification methods discussed in class to determine which factors best inform flight departure delays for domestic flights in the US. I also use regression methods discussed in class to consider the extent to which these factors are able to predict the length of departure delays that passengers experience.\
+Flight delays are an inconvenience that almost all aviation passengers will experience at some point in their travels. Yet the burden of flight delays is not the same for all passengers. In particular, US passengers are not entitled to compensation for delays\footnote{source:www.transportation.gov}. Yet, between 2013 and 2022, approximately one in every five flights from US airports was delayed by at least 15 minutes\footnote{source:www.bts.gov}. With more than 10 million scheduled passenger flights in the US each year\footnote{source:www.faa.gov}, the cost to passengers of flight delays is substantial. Indeed, the \textit{Federal Aviation Administration} estimates that flight delays in the US from 2016 to 2019 cost passengers US\$62.6billion in total. Short of relying on airlines to inform them of expected delays, there is little that US passengers can do to reliably avoid flight delays. Therefore, I apply the classification methods discussed in class to determine which factors inform flight departure delays for domestic flights in the US.\
 
 
 ```{r % flight delays for US carriers, echo=FALSE, include=FALSE, warning=FALSE}
@@ -64,7 +79,7 @@ pc_data$OP_UNIQUE_CARRIER[pc_data$OP_UNIQUE_CARRIER == 'WN'] <- 'SouthWest Airli
 pot_carrier_plt <- ggplot(pc_data, aes(x=`Year`, y=`% Delayed`, color=`OP_UNIQUE_CARRIER`)) + geom_line() + scale_x_continuous(limits = c(2010, 2022), breaks = pretty_breaks()) + scale_y_continuous(limits = c(10, 40), breaks = pretty_breaks()) + geom_point(averages, mapping=aes(x=`Year`, y=`Avg. % Delayed`), shape=15, size=2, color="black")
 
 plt_1 <-pot_carrier_plt+labs(x="Year",y="% Flights Delayed",
-               title="Percentage Flight Delays, US Carriers", color = "Top 8 US Carriers") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5)) + annotate("text", x=2012.2, y=38.75, label='Mean (All Carriers)', size = 4) + geom_point(x=2010.05, y=38.75, shape=15, size=2, color="black")
+               title="Percentage Delayed Flights: US Carriers", color = "Top 8 US Carriers") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5)) + annotate("text", x=2012.2, y=38.75, label='Mean (All Carriers)', size = 4) + geom_point(x=2010.05, y=38.75, shape=15, size=2, color="black")
 
 ```
 <br>
@@ -103,7 +118,7 @@ avg_data$OP_UNIQUE_CARRIER[avg_data$OP_UNIQUE_CARRIER == 'WN'] <- 'SouthWest Air
 pot_carrier_plt <- ggplot(avg_data, aes(x=`Year`, y=`Average Delay (minutes)`, color=`OP_UNIQUE_CARRIER`)) + geom_line() + scale_x_continuous(limits = c(2010, 2022), breaks = pretty_breaks()) + scale_y_continuous(limits = c(0, 30), breaks = pretty_breaks()) + geom_point(averages, mapping=aes(x=`Year`, y=`Avg. Average Delay (minutes)`), shape=15, size=2, color="black")
 
 plt_2 <-pot_carrier_plt+labs(x="Year",y="Average Delay (minutes)",
-               title="Average Flight Delays, US Carriers", color = "Top 8 US Carriers") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5)) + annotate("text", x=2012.2, y=28.75, label='Mean (All Carriers)', size = 4) + geom_point(x=2010.05, y=28.75, shape=15, size=2, color="black")
+               title="Average Flight Delay Length: US Carriers", color = "Top 8 US Carriers") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5)) + annotate("text", x=2012.2, y=28.75, label='Mean (All Carriers)', size = 4) + geom_point(x=2010.05, y=28.75, shape=15, size=2, color="black")
 
 ```
 <br>
@@ -140,7 +155,7 @@ data$Year <- as.numeric(data$Year)
 pot_origin_plt <- ggplot(data, aes(x=`Year`, y=`% Delayed`, color=`ORIGIN`)) + geom_jitter() + scale_x_continuous(limits = c(2010, 2022), breaks = pretty_breaks()) + scale_y_continuous(limits = c(0, 60), breaks = pretty_breaks())
 
 plt_3 <-pot_origin_plt+labs(x="Year",y="% Flights Delayed",
-                             title="Percentage Flight Delays, Origin Airports") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5), legend.position = 'none') + stat_summary(fun.y=mean, geom="point", shape=15, size=2, color="black") + annotate("text", x=2011.65, y=57.5, label='Mean (All Airports)', size = 4) + geom_point(x=2010.05, y=57.5, shape=15, size=2, color="black")
+                             title="Percentage Delayed Flights, Origin Airports") + theme(plot.title = element_text(size=14,face="bold", hjust = 0.5), legend.position = 'none') + stat_summary(fun.y=mean, geom="point", shape=15, size=2, color="black") + annotate("text", x=2011.65, y=57.5, label='Mean (All Airports)', size = 4) + geom_point(x=2010.05, y=57.5, shape=15, size=2, color="black")
 ```
 <br>
 The \textit{Bureau of Transportation Statistics} data also highlights that the frequency of delays varies by origin airport. In line with the above, around one in every five flights from a US airport is delayed. There are clearly some airports that persistently experience more frequent delays, over 50% of all flights in some cases, and some airports that experience few or no delays.
@@ -155,29 +170,32 @@ Several factors may determine whether or not a flight is delayed and for how lon
 \newpage 
 \section{Data}
 
-To identify factors that inform whether a flight is delayed on departure and for how long, I use data from the \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/} for January, March, September, and December in 2016, 2017, and 2018, respectively. The flight data contains 8777 observations on US domestic flights and 21 features, such as the flight date, origin airport, carrier, destination, distance, and other flight level characteristics. I combine this data with weather data from \textit{Weather Underground}\footnote{www.wunderground.com}. The weather data contains weather observations, such as average temperature, precipitation, and maximum wind speed, from corresponding airport weather stations on flight departure dates.
+To identify factors that inform whether a flight is delayed on departure, I use data from the \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/} for January, March, September, and December in 2016, 2017, and 2018, respectively. The flight data contains 8,777 observations on US domestic flights and 21 features, such as the flight date, origin airport, carrier, destination, distance, and other flight level characteristics. I combine this data with weather data from \textit{Weather Underground}\footnote{www.wunderground.com}. The weather data contains weather observations, such as average temperature, precipitation, and maximum wind speed, from corresponding airport weather stations on flight departure dates.
 
 \subsection{Compiling and Cleaning}
 
 \subsubsection{Flight Data}
 
-I manually download \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data} for January, March, September, and December in 2016, 2017, and 2018, respectively. I import the data and compile using Pandas in Python (see corresponding Jupyter NB). The resulting dataset has 5,851,068 observations and 21 features. To make the dataset manageable, I draw a random subset (fraction=0.0015) from each month-year sample. The resulting dataset contains 8777 observations.
+I manually download \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data} for January, March, September, and December in 2016, 2017, and 2018, respectively. I import the data and compile using Pandas in Python (see corresponding Jupyter NB). The resulting dataset has 5,851,068 observations and 21 features. To make the dataset manageable, I draw a random subset (fraction=0.0015) from each month-year sample. The resulting dataset contains 8,777 observations.
 
 \subsubsection{Weather Data}
 
-I use web-scraping methods in Python (see corresponding Jupyter NB) to acquire historical weather data from \textit{Weather Underground}. I use airport codes corresponding to origin airports for departures in the flight data to scrape historical weather data from airport weather stations. I acquire observations on temperatures, precipitation, sea level pressure, and max wind speed on the date of departure. The resulting dataset contains 6190 observations.
+I use web-scraping methods in Python (see corresponding Jupyter NB) to acquire historical weather data from \textit{Weather Underground}. I use airport codes corresponding to origin airports for departures in the flight data to scrape historical weather data from airport weather stations. I acquire observations on temperatures, precipitation, sea level pressure, and max wind speed on the date of departure. The resulting dataset contains 6,190 observations.
 
 \subsubsection{Merged Data}
-I merge the flight and weather data on the date of departure and origin airport code. For the flight data, delays are identified as any flight departing more than 15 minutes late: \texttt{DepDel15=1} if delayed and \texttt{DepDel15=0} if otherwise. Delays measured in minutes are given by \texttt{DepDelay}. Since the supervised learning methods I utilise rely on the assumption that \textbf{target variables} do not have missing values, I drop observations if both \texttt{DepDel15} and \texttt{DepDelay} are missing because such observations contain no useful information for the analysis. 
+I merge the flight and weather data on the date of departure and origin airport code. For the flight data, delays are identified as any flight departing more than 15 minutes late: \texttt{DepDel15=1} if delayed and \texttt{DepDel15=0} otherwise. Delays measured in minutes are given by \texttt{DepDelay}. Since the supervised learning methods I utilise rely on the assumption that \textbf{target variables} do not have missing values, I drop observations if both \texttt{DepDel15} and \texttt{DepDelay} are missing because such observations contain no useful information for the analysis. 
 
-Since I am interested in predicting delays and delay lengths using flight characteristics and weather observations, I consider the proportion of missing values for these predictor variables. I find that there are no missing observations in the flight data. However, around 70\% of observations have missing values for \texttt{Day Average Temp}, \texttt{High Temp}, \texttt{Low Temp}, \texttt{Max Wind Speed}, and \texttt{Sea Level Pressure} (see Jupyter NB). Moreover, around 90\% of observations have missing values for \texttt{Precipitation}. Dropping observations missing weather data is costly in terms of observations. Yet, the weather data is of interest in prediction and is likely independent of many flight characteristics. I choose to omit observations that have missing values for \texttt{Day Average Temp}, \texttt{High Temp}, \texttt{Low Temp}, \texttt{Max Wind Speed}, and \texttt{Sea Level Pressure}. Further omitting observations that have missing values for precipitation may be discarding useful information: the correlation between \texttt{DepDel15} and \texttt{Precipitation} (0.059) and between \texttt{DepDelay} and \texttt{Precipitation} (0.026) are both non-negligible, and; mean precipitation is higher for delayed departures (0.446 inches) than for non-delayed departures (0.342 inches). Since \texttt{Precipitation} is correlated with other weather observations, I choose to impute missing values for \texttt{Precipitation} using k-Nearest Neighbours on weather data. I optimise parameter $k$ by choosing $k \in (0,100)$ to minimise the MSE for in-sample prediction using 50 random sub-samples of complete weather data (see Jupyter NB). I impute missing values using $k^*=2$ and replace missing values for \texttt{Precipitation} in the merged dataset. The resulting dataset has 2693 observations and 27 features.
+Since I am interested in predicting delays and delay lengths using flight characteristics and weather observations, I consider the proportion of missing values for these predictor variables. I find that there are no missing observations in the flight data. However, around 70\% of observations have missing values for \texttt{Day.Average.Temp}, \texttt{High.Temp}, \texttt{Low.Temp}, \texttt{Max.Wind.Speed}, and \texttt{Sea.Level.Pressure} (see Jupyter NB). Moreover, around 90\% of observations have missing values for \texttt{Precipitation}. Dropping observations missing weather data is costly in terms of observations. Yet, the weather data is of interest in prediction and is likely independent of many flight characteristics. I choose to omit observations that have missing values for \texttt{Day.Average.Temp}, \texttt{High.Temp}, \texttt{Low.Temp}, \texttt{Max.Wind.Speed}, and \texttt{Sea.Level.Pressure}.\
+
+Further omitting observations that have missing values for precipitation may be discarding useful information: the correlation between \texttt{DepDel15} and \texttt{Precipitation} (0.059) and between \texttt{DepDelay} and \texttt{Precipitation} (0.026) are both non-negligible, and; mean precipitation is higher for delayed departures (0.446 inches) than for non-delayed departures (0.342 inches). Since \texttt{Precipitation} is correlated with other weather observations, I choose to impute missing values for \texttt{Precipitation} using k-Nearest Neighbours on weather data. I optimise parameter $k$ by choosing $k \in (0,100)$ to minimise the average MSE for out-of-sample prediction across 50 random sub-samples of complete weather data (see Jupyter NB). I impute missing values for \texttt{Precipitation} in the merged dataset using $k^*=2$. The resulting dataset has 2,693 observations and 27 features.
 
 
 \subsection{Feature Engineering}
 
-There is structure in the data that may be useful to exploit. For instance, the data already splits flight dates into \texttt{Month}, \texttt{DayofMonth}, and \texttt{DayofWeek}, which may be relevant in predicting flight delays if, for example, weekend flights are more prone to delays. In a similar vein, I re-code \texttt{DepTimeBlk}, which gives the astronomical time interval in which a departure is scheduled, as a factor variable to be used in prediction. I likewise re-code \texttt{ArrTimeBlk}. The variables \texttt{CRSDepTimeBlk}
+There is structure in the data that may be useful to exploit. For instance, the data already splits flight dates into \texttt{Month}, \texttt{DayofMonth}, and \texttt{DayofWeek}, which may be relevant in predicting flight delays if, for example, weekend flights are more prone to delays. In a similar vein, I re-code \texttt{DepTimeBlk}, which gives the astronomical time interval in which a departure is scheduled, as a factor variable to be used in prediction. I likewise re-code \texttt{ArrTimeBlk}. The variables \texttt{CRSDepTime} and \texttt{CRSArrTime} give the scheduled departure and arrival times of a flight in astronomical time. I find the difference in minutes between scheduled departure and arrival times to categorise scheduled flight lengths by hour in \texttt{SchFlTm}. The variable \texttt{Distance} gives the flight distance in miles, I categorise flights by distance in \texttt{DistGr} in intervals of 500 miles. I assign \texttt{InSt=1} if a flight is within state and \texttt{InSt=0} otherwise using \texttt{OriginStateName} and \texttt{DestStateName}. Finally, I use a stricter definition of a departure delay than that of \texttt{DepDel15}. I assign \texttt{Delayed=1} if \texttt{DepDelay>0} and \texttt{Delayed=0} otherwise. The dataset used for the analysis contains 2,685 observations and 31 features\footnote{Note: I remove \texttt{Flights}, which gives the number of flights per flight journey, since it is equal to one for all observations and therefore containts no useful information.}. 
 
-```{r feature engineering}
+
+```{r feature engineering, echo=FALSE, include=FALSE, warning=FALSE}
 rm (list = ls())
 
 data <- read.csv('https://github.com/Oryder-green/FDS-project/blob/main/Delay_Data.csv?raw=true')
@@ -192,19 +210,1003 @@ data$ArrTimeBlk <- as.factor(data$ArrTimeBlk)
 
 #scheduled flight length
 
-#scheduled flight length group
+#convert to string
 
-#distance group
+data$strCRSDepTime <- as.character(data$CRSDepTime)
+data$strCRSArrTime <- as.character(data$CRSArrTime)
+
+#pad string to 4 digits with leading zero.
+
+data$strCRSDepTime <- str_pad(data$strCRSDepTime, 4, pad="0")
+data$strCRSArrTime <- str_pad(data$strCRSArrTime, 4, pad="0")
+
+#create string data time object
+
+data$strdtm_CRSDepTime <- paste(data$FlightDate, data$strCRSDepTime)
+data$strdtm_CRSArrTime <- paste(data$FlightDate, data$strCRSArrTime)
+
+#convert to datetime 
+
+data$tCRSDepTime <- as.POSIXct(data$strdtm_CRSDepTime,format="%Y-%m-%d %H%M")
+data$tCRSArrTime <- as.POSIXct(data$strdtm_CRSArrTime,format="%Y-%m-%d %H%M")
+
+#add day to arrival datetime if departure time is greater than arrival time (no US domestic flights are longer than 12 hours in duration).
+
+data$tCRSArrTime[data$CRSDepTime>data$CRSArrTime] <- data$tCRSArrTime[data$CRSDepTime>data$CRSArrTime] + 24*60*60
+
+#time difference in minutes. 
+
+data$ArrDepDif <- difftime(data$tCRSArrTime, data$tCRSDepTime, units='mins')
+
+#scheduled flight length group blocks. 
+
+data$ArrDepDif <- as.numeric(data$ArrDepDif)
+
+data$SchFlTm <- cut(data$ArrDepDif, breaks=c(0,60,120,180,240,300,360,420,480,540,600,660,720), labels=c('<1', '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10', '10-11', '11-12'))
+
+#check NAs
+
+nas <- data[which(is.na(data$SchFlTm)),]
+
+#the NAs appear to contain erroneous flight data. Flights are between neighbouring states and 
+#scheduled arrival times are earlier than scheduled departures!
+
+#drop nas from dataset
+
+data<-data[which(is.na(data$SchFlTm)==FALSE),]
+
+rm(nas)
+
+#drop irrelevant datetime columns from the dataset
+
+data <- data[, which(!colnames(data) %in% c('strCRSDepTime', 'strCRSArrTime', 'strdtm_CRSDepTime', 'strdtm_CRSArrTime', 'tCRSDepTime', 'tCRSArrTime', 'ArrDepDif'))]
+
+#distance group in miles. 
+
+data$DistGr <- cut(data$Distance, breaks=c(seq(from=0, to=5000, by=500)), labels=c('<500', '500-1000', '1000-1500', '1500-2000', '2000-2500', '2500-3000', '3000-3500', '3500-4000', '4000-4500', '4500-5000'))
 
 #instate flight
 
+data$InSt = as.factor(as.integer(data$OriginStateName == data$DestStateName))
+
+#delayed flight. 
+
+data$Delay <- as.factor(as.integer(data$DepDelay > 0))
+
+#drop flights
+
+data <- data[, which(!colnames(data) %in% c('Flights'))]
 
 ```
 
 \subsection{Summary}
 
+```{r summary, echo=FALSE, warning=FALSE}
 
-```{r summary, echo=FALSE}
-plot(pressure)
+# Delayed vs not-delayed.
+
+df <- as.data.frame(matrix(NA, 2, 2))
+
+colnames(df) <- c('%', 'Status')
+
+df$Status[1] <- 'Non-delayed'
+df$Status[2] <- 'Delayed'
+
+df$`%`[1] <- mean(data$Delay==0)*100
+df$`%`[2] <- mean(data$Delay==1)*100
+
+plt_4 <- ggplot(df, aes(x=Status, y=`%`, fill=Status)) + geom_bar(stat="identity") + scale_y_continuous(limits = c(0, 70), breaks = pretty_breaks()) + labs(x="Status",y="% Flights", title="Flight Status") + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme (legend.position="none")
+
+rm(df)
+# Distribution of delay length. 
+
+plt_5 <- ggplot(data, aes(x=DepDelay/60)) + geom_histogram(aes(y=stat(count/sum(count))), bins=100, col='black', fill='darkgrey') + scale_x_continuous(limits = c(-2, 15), breaks = c(-2,0,2,4,6,8,10,12,14)) + scale_y_continuous(limits = c(0, 0.6), breaks=c(seq(0,0.6,0.10))) + labs(x="Delay Length (hours)", y="% Flights", title="Flight Delay Lengths") + theme(plot.title = element_text(size=11, face="bold", hjust = 0.5))
+
+# Features by delayed and not-delayed.
+
+#Scheduled flight time.
+plt_6 <- ggplot(data, aes(x=Delay, y=1, fill=factor(SchFlTm))) + geom_bar(position ='fill', stat = 'identity')  + scale_y_continuous(limits = c(0, 1), breaks = pretty_breaks()) + scale_x_discrete(labels=c('0'='Non-Delayed', '1'='Delayed')) + labs(x="Status",y="% Flights", title="Scheduled Flight Time by Delay Status", fill='Flight Time (hours)') + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5))
+
+#Flight distance.
+plt_7 <- ggplot(data, aes(x=Delay, y=1, fill=factor(DistGr))) + geom_bar(position ='fill', stat = 'identity')  + scale_y_continuous(limits = c(0, 1), breaks = pretty_breaks()) + scale_x_discrete(labels=c('0'='Non-Delayed', '1'='Delayed')) + labs(x="Status",y="% Flights", title="Flight Distance by Delay Status", fill='Flight Distance (miles)') + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5))
+
+#Departure block.
+plt_8 <- ggplot(data, aes(x=Delay, y=1, fill=factor(DepTimeBlk))) + geom_bar(position ='fill', stat = 'identity')  + scale_y_continuous(limits = c(0, 1), breaks = pretty_breaks()) + scale_x_discrete(labels=c('0'='Non-Delayed', '1'='Delayed')) + labs(x="Status",y="% Flights", title="Departure Block by Delay Status", fill='Departure Block') + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.text = element_text (size=6)) + guides(fill=guide_legend(ncol=2)) + theme(legend.title.align = 0.5)
+
+#Departure day.
+
+plt_9 <- ggplot(data, aes(x=Delay, y=1, fill=factor(DayOfWeek))) + geom_bar(position ='fill', stat = 'identity')  + scale_y_continuous(limits = c(0, 1), breaks = pretty_breaks()) + scale_x_discrete(labels=c('0'='Non-Delayed', '1'='Delayed')) + labs(x="Status",y="% Flights", title="Departure Day by Delay Status", fill='Day of Week') + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.title.align = 0.5)
+
+
+#Weather.
+
+#normalise weather data.
+
+scaled_data <- data
+
+min_max_norm <- function(x) {(x - min(x)) / (max(x) - min(x))}
+  
+scaled_data[, which(colnames(data) %in% c('Day.Average.Temp', 'High.Temp', 'Low.Temp', 'Max.Wind.Speed', 'Precipitation', 'Sea.Level.Pressure'))] <- lapply(data[, which(colnames(data) %in% c('Day.Average.Temp', 'High.Temp', 'Low.Temp', 'Max.Wind.Speed', 'Precipitation', 'Sea.Level.Pressure'))], min_max_norm)
+  
+#temperatures.
+
+scaled_data_temp <- scaled_data[, which(colnames(data) %in% c('Delay','Day.Average.Temp', 'High.Temp', 'Low.Temp'))]
+
+#reform to plot. 
+
+long_scaled_data_temp <- melt(scaled_data_temp, id='Delay')
+
+plt_10 <- ggplot(long_scaled_data_temp, aes(x=variable, y=value, fill=Delay)) + geom_split_violin(trim=TRUE) + labs(x="Variable",y="Normalised Temperature", title="Temperature by Delay Status", fill='Status') + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.title.align = 0.5) +scale_fill_discrete(labels=c('Non-delayed', 'Delayed'))
+
+#other weather.
+
+scaled_data_other <- scaled_data[, which(colnames(data) %in% c('Delay','Max.Wind.Speed', 'Precipitation', 'Sea.Level.Pressure'))]
+
+#reform to plot. 
+
+long_scaled_data_other <- melt(scaled_data_other, id='Delay')
+
+plt_11 <- ggplot(long_scaled_data_other, aes(x=variable, y=value, fill=Delay)) + geom_split_violin(trim=TRUE, scale="width")  + labs(x="Variable",y="Normalised Measure", title="Other Weather by Delay Status", fill='Status') + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.title.align = 0.5) +scale_fill_discrete(labels=c('Non-delayed', 'Delayed'))
+
+rm(data_features, long_scaled_data_other, long_scaled_data_temp, scaled_data, scaled_data_temp, scaled_data_other)
+
 ```
 
+In the data, the balance of departure delays is:
+<br>
+```{r delay_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_4
+```
+
+\newpage
+The distribution of departure delay lengths is\footnote{Early departures have negative delay lengths.}:
+<br>
+```{r length_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_5
+```
+<br>
+
+I consider the features that may be useful in distinguishing between delayed and non-delayed flights. Delayed flights tend to have longer scheduled flight times:
+<br>
+```{r features_plt_6, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_6
+
+```
+\newpage
+Accordingly, delayed flights tend to have greater flight distances:
+<br>
+```{r features_plt_7, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_7
+```
+<br>
+Delayed flights tend to be scheduled to depart at later in the day:
+<br>
+```{r features_plt_8, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_8
+```
+\newpage
+Delayed flights also tend to be scheduled to depart at later in the week (i.e., Thursday and Friday):
+<br>
+```{r features_plt_9, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_9
+```
+Flight delays appear to coincide somewhat more frequently with colder weather:
+<br>
+```{r features_plt_10, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_10
+```
+\newpage
+Flight delays appear to coincide somewhat more frequently with more adverse weather\footnote{note: the upper tails for \texttt{Max.Wind.Speed} and \texttt{Precipitation} belong to the distributions for delayed flights.}:
+<br>
+```{r features_plt_11, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_11
+```
+
+```{r prediction_GLM_Logit, echo=FALSE, include=FALSE, warning=FALSE}
+
+#Move FlightDate and Delay to front of dataframe
+
+data = data %>% select(FlightDate, Delay, everything())
+
+#drop OriginCityName and DestCityName as perfectly collinear with Origin and Dest.
+
+data <- data[, which(!colnames(data) %in% c('OriginCityName', 'DestCityName'))]
+
+#drop Year, DepDelay, DepDel15, CRSDepTime, CRSArrTime, and Distance since they are either irrelevant for prediciton or contain variation captured by newly defined factors.
+
+data <- data[, which(!colnames(data) %in% c('Year', 'DepDelay', 'DepDel15', 'CRSDepTime', 'CRSArrTime', 'Distance'))]
+
+#Set categorical data to factors.
+
+cols <- c('Month', 'DayofMonth', 'DayOfWeek', 'IATA_CODE_Reporting_Airline', 'Origin', 'OriginStateName', 'Dest', 'DestStateName', 'DepTimeBlk', 'ArrTimeBlk', 'DistGr', 'Imputed.Precipitation', 'SchFlTm', 'InSt', 'Delay')
+  
+data[, cols] <- data.frame(apply(data[, cols], 2, as.factor))
+
+#Scale continuous data. 
+
+cols <- c('TaxiOut', 'Day.Average.Temp', 'High.Temp', 'Low.Temp', 'Max.Wind.Speed', 'Precipitation', 'Sea.Level.Pressure')
+
+data[,cols] <- scale(data[, cols])
+
+
+#Used to create model matrices with factors as binary variables.
+
+
+X <- data.frame(data[, !colnames(data) %in% c('Month', 'DayofMonth', 'DayOfWeek', 'IATA_CODE_Reporting_Airline', 'Origin', 'OriginStateName', 'Dest', 'DestStateName', 'DepTimeBlk', 'ArrTimeBlk', 'DistGr', 'Imputed.Precipitation', 'SchFlTm', 'InSt', 'Delay', 'FlightDate')], model.matrix(~ Month + DayofMonth+DayOfWeek+IATA_CODE_Reporting_Airline+Origin + OriginStateName +Dest+DestStateName+DepTimeBlk+ArrTimeBlk + DistGr + SchFlTm+InSt-1, data))
+
+#Split the sample into test and train.
+
+set.seed(666)
+
+sample <- sample <- sample(c(TRUE, FALSE), nrow(data), replace=TRUE, prob=c(0.7,0.3))
+
+
+#training and test samples
+X_train  <- X[sample,]
+X_test   <- X[!sample,]
+y_train <- as.numeric(data[sample, 'Delay'])
+y_test <- as.numeric(data[!sample, 'Delay'])
+
+#Fit logit model on training data.
+
+train_df <- cbind(X_train, y_train)
+
+logit  <- glm(y_train ~ . , data = train_df , family = binomial(logit))
+
+summary(logit)
+
+#predict test data
+  
+predictions_logit <- predict(logit, newdata=X_test, type='response')
+
+#classify delays according to most likely case p>0.5. 
+
+test_df <- cbind(X_test, y_test)
+
+y_hat_logit <- ifelse(predictions_logit>0.5, 1,0)
+
+#Confusion Matrix 
+
+table(test_df$y_test, y_hat_logit)
+
+cm_logit  <- data.frame(table('True'=test_df$y_test,'Predicted'=as.double(y_hat_logit)))
+cm_logit  <- cm_logit %>% group_by(Predicted) %>% mutate(Predicted_pct = Freq/sum(Freq))
+
+plt_12 <- ggplot(data = cm_logit, mapping = aes(x = ordered(True,c(1,0)), y = Predicted, fill=Predicted_pct)) +  geom_tile() + geom_text(aes(label=round(Predicted_pct,2)),col='white') + xlab('True') + labs(x="True",y="Predicted", title="Confusion Matrix, Logit") + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.position = 'none') + scale_x_discrete(labels=c('Delayed', 'Non-delayed')) + scale_y_discrete(labels=c('Non-delayed', 'Delayed'))
+
+#rates we're interested in.
+#sensitivity.
+true_pos <- c('')
+false_neg <- c('')
+#specificity.
+true_neg <- c('')
+
+#store logit rates
+true_pos['logit'] <- cm_logit[4, 'Predicted_pct']
+false_neg['logit'] <- cm_logit[2, 'Predicted_pct']
+true_neg['logit'] <- cm_logit[1, 'Predicted_pct']
+
+
+#Accuracy. How does Logit perform for a given observation, i.e., how often does a logit prediction hit the target on average?
+
+hit_avg_logit <- mean(y_hat_logit != test_df$y_test)
+logit_acc <- 1-hit_avg_logit
+
+#store accuracy.
+acc <- c('')
+
+#store logit accuracy.
+acc['logit'] <- logit_acc
+
+#performance changing the decision boundary, true positive vs. false positive, ROC.
+
+logit_roc <- roc(test_df$y_test, predictions_logit)
+
+#performance of the prediction sample distributions.
+
+logit_auc <- round(auc(test_df$y_test, predictions_logit),4)
+
+auc <- c('')
+
+auc['logit'] <- logit_auc
+
+roclist_logit <- list("Logit" = logit_roc)
+
+plt_13 <- ggroc(roclist_logit, size = 1, legacy.axes = TRUE, method="linetype") + ggtitle(paste0('ROC Curve: Logit ', '(AUC = ', logit_auc, ')')) + labs(y='Sensitivity', x='1-Specificity', linetype='Method', color='Method') + geom_point(aes(x=0,y=1, color='Perfect predictor')) +  geom_abline(aes(slope=1,intercept=0, color='Random guess')) + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.title.align = 0.5)
+
+
+#Top 5 most important predictors overall.
+
+logit_predictors <- caret::varImp(logit)
+
+logit_top5_overall <- rownames(logit_predictors)[order(logit_predictors$Overall, decreasing=TRUE)[1:5]]
+
+#store Top5 
+
+Top5 <- data.frame(matrix(NA, 5, 0))
+
+Top5['logit'] <- logit_top5_overall
+
+
+#Top 5 most important origins.
+
+logit_list <- rownames(logit_predictors)[order(logit_predictors$Overall, decreasing=TRUE)]
+
+logit_top5_Origins <- logit_list[grepl('Origin', logit_list)][1:5]
+
+top5_Origins <- data.frame(matrix(NA, 5, 0))
+
+top5_Origins['logit'] <- logit_top5_Origins
+
+
+#Top 5 most important destinations
+
+logit_top5_Dests <- logit_list[grepl('Dest', logit_list)][1:5]
+
+top5_Dests <- data.frame(matrix(NA, 5, 0))
+
+top5_Dests['logit'] <- logit_top5_Dests
+
+
+#Top 5 most important carriers.
+
+logit_top5_Carriers <- logit_list[grepl('IATA', logit_list)][1:5]
+
+top5_Carriers <- data.frame(matrix(NA, 5, 0))
+
+top5_Carriers['logit'] <- logit_top5_Carriers
+
+#Top 5 most important flight and weather characteristics.
+
+logit_top5_flight_features <- logit_list[!(grepl('Dest', logit_list) | (grepl('Origin', logit_list)) | (grepl('IATA', logit_list)))][1:5]
+
+top5_flight_features <- data.frame(matrix(NA, 5, 0))
+
+top5_flight_features['logit'] <- logit_top5_flight_features
+
+```
+
+\subsection{Methodology and Results}
+
+The task is to identify important predictors of flight delays. To this end, I use supervised methods that are able to classify (i.e., predict) delayed and non-delayed flights. I compare Logit, Lasso, Ridge, Elastic Net, Random Forest, and Boosting methods. I consider the performance of these methods and the top 5 most important predictors of flight delays they each identify. I also consider the top 5 airlines, origins, destinations, and top flight and weather features the methods identify.\
+
+Since passengers likely wish to avoid costly delays, the performance of the methods is evaluated using the true positive and false negative rates of prediction. Accordingly, I cross-validate the fit of models using the AUC as the performance metric. Moreover, since passengers presumably wish to take their intended flight, I assess the methods using false positive rates. Finally, I consider the accuracy of prediction since a given passenger would wish to know whether a given flight is likely to be delayed. \
+
+To fit the models, I divide the merged dataset into training (n=`r dim(X_train)[1]`) and test (n=`r dim(X_test)[1]`) samples\footnote{Note: continuous variables are normalised.}. I fit the models on the training sample and cross-validate, where relevant, to tune model parameters. I then predict delays in the test sample using parametised models. \
+
+First, I fit a Logit model that yields the following:
+```{r logit_plt_1, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_12
+```
+
+```{r logit_plt_2, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_13
+```
+```{r prediction_LASSO_RIDGE_ELNET, echo=FALSE, warning=FALSE}
+
+#Use split train/test data.
+
+X_train_mat <- data.matrix(X_train)
+X_test_mat <- data.matrix(X_test)
+
+#Fit Lasso, Ridge, and Elnet models and cross validate.
+
+#type.measure="auc" uses AUC in the loss function.
+
+#Lasso, alpha=1. 
+lasso_cv <- cv.glmnet(x=X_train_mat,y=y_train, alpha=1, nfolds=10, grouped=FALSE, type.measure="auc", family = "binomial")
+
+#Ridge, alpha=0.
+ridge_cv <- cv.glmnet(x=X_train_mat,y=y_train, alpha=0, nfolds=10, grouped=FALSE, type.measure="auc", family = "binomial")
+
+#Elnet. Optimise lambda and optimise alpha via grid-search using caret package.
+
+#set y_train as factor.
+
+y_train <- ifelse(y_train == 1, 'Delayed', 'Ndelayed')
+
+train_df <- data.frame(cbind(X_train,y_train))
+
+ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3, summaryFunction = twoClassSummary, classProbs = TRUE)
+
+#metric = ROC uses the AUC in the loss function.
+elnet_cv <- train(y_train~., data = train_df, method = "glmnet", trControl = ctrl, metric = "ROC")
+
+#Predictions from cross-validated models.
+
+#lasso
+predictions_lasso <- predict(lasso_cv, newx = X_test_mat, s='lambda.min', type='response')
+
+#ridge
+predictions_ridge <- predict(ridge_cv, newx = X_test_mat, s='lambda.min', type='response')
+  
+#elnet
+predictions_elnet <- predict(elnet_cv, newdata = X_test, type='prob')
+
+#classify delays according to most likely case p>0.5. 
+
+y_hat_lasso <- ifelse(predictions_lasso>0.5, 1,0)
+y_hat_ridge <- ifelse(predictions_ridge>0.5, 1,0)
+y_hat_elnet <- ifelse(predictions_elnet$Delayed>0.5, 1,0)
+
+#Confusion Matrices 
+
+table(test_df$y_test, y_hat_lasso)
+table(test_df$y_test, y_hat_ridge)
+table(test_df$y_test, y_hat_elnet)
+
+
+#lasso
+cm_lasso  <- data.frame(table('True'=test_df$y_test,'Predicted'=as.double(y_hat_lasso)))
+cm_lasso  <- cm_lasso %>% group_by(Predicted) %>% mutate(Predicted_pct = Freq/sum(Freq))
+
+plt_14 <- ggplot(data = cm_lasso, mapping = aes(x = ordered(True,c(1,0)), y = Predicted, fill=Predicted_pct)) +  geom_tile() + geom_text(aes(label=round(Predicted_pct,2)),col='white') + xlab('True') + labs(x="True",y="Predicted", title="Confusion Matrix: Lasso") + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.position = 'none') + scale_x_discrete(labels=c('Delayed', 'Non-delayed')) + scale_y_discrete(labels=c('Non-delayed', 'Delayed'))
+
+#ridge
+cm_ridge  <- data.frame(table('True'=test_df$y_test,'Predicted'=as.double(y_hat_ridge)))
+cm_ridge  <- cm_ridge %>% group_by(Predicted) %>% mutate(Predicted_pct = Freq/sum(Freq))
+
+plt_15 <- ggplot(data = cm_ridge, mapping = aes(x = ordered(True,c(1,0)), y = Predicted, fill=Predicted_pct)) +  geom_tile() + geom_text(aes(label=round(Predicted_pct,2)),col='white') + xlab('True') + labs(x="True",y="Predicted", title="Confusion Matrix: Ridge") + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.position = 'none') + scale_x_discrete(labels=c('Delayed', 'Non-delayed')) + scale_y_discrete(labels=c('Non-delayed', 'Delayed'))
+
+#elnet
+cm_elnet  <- data.frame(table('True'=test_df$y_test,'Predicted'=as.double(y_hat_elnet)))
+cm_elnet  <- cm_elnet %>% group_by(Predicted) %>% mutate(Predicted_pct = Freq/sum(Freq))
+
+plt_16 <- ggplot(data = cm_elnet, mapping = aes(x = ordered(True,c(1,0)), y = Predicted, fill=Predicted_pct)) +  geom_tile() + geom_text(aes(label=round(Predicted_pct,2)),col='white') + xlab('True') + labs(x="True",y="Predicted", title="Confusion Matrix: Elastic Net") + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.position = 'none') + scale_x_discrete(labels=c('Delayed', 'Non-delayed')) + scale_y_discrete(labels=c('Non-delayed', 'Delayed'))
+
+#rates we're interested in.
+
+#store lasso rates
+true_pos['lasso'] <- cm_lasso[4, 'Predicted_pct']
+false_neg['lasso'] <- cm_lasso[2, 'Predicted_pct']
+true_neg['lasso'] <- cm_lasso[1, 'Predicted_pct']
+
+#store ridge rates
+true_pos['ridge'] <- cm_ridge[4, 'Predicted_pct']
+false_neg['ridge'] <- cm_ridge[2, 'Predicted_pct']
+true_neg['ridge'] <- cm_ridge[1, 'Predicted_pct']
+
+#store elnet rates
+true_pos['elnet'] <- cm_elnet[4, 'Predicted_pct']
+false_neg['elnet'] <- cm_elnet[2, 'Predicted_pct']
+true_neg['elnet'] <- cm_elnet[1, 'Predicted_pct']
+
+
+#Accuracy. How often do lasso, ridge, and elnet predictions hit the target on average?
+
+#lasso
+hit_avg_lasso <- mean(y_hat_lasso != test_df$y_test)
+lasso_acc <- 1-hit_avg_lasso
+
+#ridge
+hit_avg_ridge <- mean(y_hat_ridge != test_df$y_test)
+ridge_acc <- 1-hit_avg_ridge
+
+#elnet
+hit_avg_elnet <- mean(y_hat_elnet != test_df$y_test)
+elnet_acc <- 1-hit_avg_elnet
+
+
+#store accuracies.
+acc['lasso'] <- lasso_acc
+acc['ridge'] <- ridge_acc
+acc['elnet'] <- elnet_acc
+
+#performance changing the decision boundary, true positive vs. false positive, ROCs.
+
+lasso_roc <- roc(test_df$y_test, predictions_lasso)
+ridge_roc <- roc(test_df$y_test, predictions_ridge)
+elnet_roc <- roc(test_df$y_test, predictions_elnet$Delayed)
+
+#performance of the prediction sample distributions.
+
+lasso_auc <- round(auc(test_df$y_test, predictions_lasso),4)
+ridge_auc <- round(auc(test_df$y_test, predictions_ridge),4)
+elnet_auc <- round(auc(test_df$y_test, predictions_elnet$Delayed),4)
+
+#store AUCs
+
+auc['lasso'] <- lasso_auc
+auc['ridge'] <- ridge_auc
+auc['elnet'] <- elnet_auc
+
+roclist <- list('Lasso' = lasso_roc, 'Ridge'=ridge_roc, 'Elnet' = elnet_roc)
+
+plt_17 <- ggroc(roclist, size = 1, legacy.axes = TRUE, method = "linetype") + ggtitle('ROC Curves: Lasso, Ridge, and Elastic Net') + labs(y='Sensitivity', x='1-Specificity', linetype='Method', color='Baseline') + geom_point(aes(x=0,y=1, color='Perfect predictor')) +  geom_abline(aes(slope=1,intercept=0, color='Random guess')) + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.title.align = 0.5) + annotate("text", x=0.75, y=0.4, label=paste0('Lasso ', 'AUC = ', lasso_auc), size = 4) + annotate("text", x=0.75, y=0.3, label=paste0('Ridge ', 'AUC = ', ridge_auc), size = 4) + annotate("text", x=0.775, y=0.2, label=paste0('Elastic Net ', 'AUC = ', elnet_auc), size = 4)
+
+#Most important predictors.
+
+#lasso 
+lasso_predictors <- coef(lasso_cv)
+lasso_sort <- sort(abs(lasso_predictors@x), decreasing=TRUE, index.return=TRUE)
+lasso_predictors <- lasso_predictors@Dimnames[[1]][c(lasso_sort$ix)]
+
+#ridge
+ridge_predictors <- coef(ridge_cv)
+ridge_sort <- sort(abs(ridge_predictors@x), decreasing=TRUE, index.return=TRUE)
+ridge_predictors <- ridge_predictors@Dimnames[[1]][c(ridge_sort$ix)]
+
+#elnet
+elnet_predictors <- caret::varImp(elnet_cv)
+
+temp <- elnet_predictors[['importance']]
+temp_temp <- subset(temp, Overall !=0)
+temp_temp_temp <- setorder(temp_temp, -Overall)
+
+elnet_predictors <- rownames(temp_temp_temp)
+
+rm(temp, temp_temp, temp_temp_temp)
+
+#store Top5 overall predictors.
+
+Top5['lasso'] <- lasso_predictors[lasso_predictors!= '(Intercept)'][1:5]
+Top5['ridge'] <- ridge_predictors[ridge_predictors!= '(Intercept)'][1:5]
+Top5['elnet'] <- elnet_predictors[elnet_predictors!= '(Intercept)'][1:5]
+
+#Top 5 most important origins.
+
+top5_Origins['lasso'] <- lasso_predictors[grepl('Origin', lasso_predictors)][1:5]
+top5_Origins['ridge'] <- ridge_predictors[grepl('Origin', ridge_predictors)][1:5]
+top5_Origins['elnet'] <- elnet_predictors[grepl('Origin', elnet_predictors)][1:5]
+
+
+#Top 5 most important destinations
+
+top5_Dests['lasso'] <- lasso_predictors[grepl('Dest', lasso_predictors)][1:5]
+top5_Dests['ridge'] <- ridge_predictors[grepl('Dest', ridge_predictors)][1:5]
+top5_Dests['elnet'] <- elnet_predictors[grepl('Dest', elnet_predictors)][1:5]
+
+#Top 5 most important carriers.
+
+top5_Carriers['lasso'] <- lasso_predictors[grepl('IATA', lasso_predictors)][1:5]
+top5_Carriers['ridge'] <- ridge_predictors[grepl('IATA', ridge_predictors)][1:5]
+top5_Carriers['elnet'] <- elnet_predictors[grepl('IATA', elnet_predictors)][1:5]
+
+
+#Top 5 most important flight and weather characteristics.
+
+top5_flight_features['lasso'] <- lasso_predictors[!(grepl('Dest', lasso_predictors) | (grepl('Origin', lasso_predictors)) | (grepl('IATA', lasso_predictors)) | (grepl('Intercept', lasso_predictors)))][1:5]
+top5_flight_features['ridge'] <- ridge_predictors[!(grepl('Dest', ridge_predictors) | (grepl('Origin', ridge_predictors)) | (grepl('IATA', ridge_predictors)) | (grepl('Intercept', ridge_predictors)))][1:5]
+top5_flight_features['elnet'] <- elnet_predictors[!(grepl('Dest', elnet_predictors) | (grepl('Origin', elnet_predictors)) | (grepl('IATA', elnet_predictors))| (grepl('Intercept', elnet_predictors)))][1:5]
+
+```
+<br>
+The logit model performs relatively poorly at predicting delays; for instance, it assigns higher probabilities to delays over non-delays only marginally better than a random guess. Perhaps this is due to over-fitting on the training sample (i.e., the model delivers low bias in-sample but high variance out-of-sample). I therefore turn to shrinkage methods to strike a better bias-variance trade-off. In particular, I fit and cross-validate Lasso, Ridge, and Elastic Net models\footnote{Note: I tune shrinkage for Lasso (=`r lasso$lambda`), Ridge (=`r ridge$lambda`), and Elastic Net (= `r elnet$bestTune$lambda`). I tune sparsity for Elastic Net (= `r elnet$bestTune$alpha`).} that yield:
+```{r lasso_plt_1, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_14
+```
+
+```{r ridge_plt_1, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_15
+```
+
+```{r elnet_plt_1, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_16
+```
+```{r lasso_ridge_elnet_plt_2, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_17
+```
+<br> 
+Evidently, prediction performance improves using shrinkage methods. In particular, Lasso, Ridge, and Elastic Net exhibit more desirable true positive and false positive rates; as a result, the respective AUCs are an improvement on logit. That said, false negative rates remain similar to logit. The possibility of 'creeping delays', caused by the interaction of features that increase the probability of a delay, suggest that non-linearities in the data may be an important aspect of prediction. I therefore turn to non-linear methods. I grow and prune a Random Forest\footnote{Note: I manually tune to optimise the maximum number of features (=`r rf$mtry`) and number of trees (=`r rf$ntree`).} and subsequently consider the predictive power of a consortium of \texit{weak learners} using cross-validated Gradient-based Minimisation ("GBM")\footnote{Note: I manually tune to optimise the learning rate (=`r gbm$shrinkage`), number of trees (= `r gbm$n.trees`), and tree depth (= `r gbm$interaction.depth`).}, which yield:
+
+```{r prediction_RF_Boost, echo=FALSE, warning=FALSE}
+
+#Split X_train into train and cv sample.
+
+set.seed(666)
+
+sample <- sample <- sample(c(TRUE, FALSE), nrow(data), replace=TRUE, prob=c(0.7,0.3))
+
+#training and test samples
+X_train  <- X[sample,]
+X_test   <- X[!sample,]
+y_train <- as.numeric(data[sample, 'Delay'])
+y_test <- as.numeric(data[!sample, 'Delay'])
+
+#Fit logit model on training data.
+
+train_df <- cbind(X_train, y_train)
+
+set.seed(666)
+
+sample <- sample(c(TRUE, FALSE), nrow(X_train), replace=TRUE, prob=c(0.7,0.3))
+
+X_test_cv <- X_train[!sample,]
+X_train_cv <- X_train[sample,]
+y_train_cv <- y_train[sample]
+y_test_cv <- y_train[!sample]
+
+#Random forest. Cross-validate and tune number of trees and number of features to split on. Due to computational limitations, I take a manual approach to tuning but would otherwise prefer to tune using grid search over max features and number of trees.
+
+modellist <- data.frame(matrix(NA, nrow=1, ncol=0))
+
+cv_train_df <- data.frame(cbind(y_train_cv, X_train_cv))
+cv_test_df <- data.frame(X_test_cv)
+
+#Tune max features with default number of trees. 
+for (max_features in 1:ncol(X_train_cv)){
+    rf_cv <- randomForest(y_train_cv~., data=cv_train_df, mtry=max_features, ntree=500)
+    #predict for CV
+    y_pred_cv <- predict(rf_cv, newdata=cv_test_df, "prob")
+    
+    #assess fit using AUC.
+    rf_cv_auc <- round(auc(y_test_cv, y_pred_cv[,2]), 4)
+    
+    key1 <- toString(max_features)
+    
+    print(key1)
+    
+    modellist[key1] <- rf_cv_auc
+}
+
+param_tune_rf <- colnames(modellist)[max.col(modellist)]
+
+max_features_star <- as.numeric(param_tune_rf)
+
+modellist <- data.frame(matrix(NA, nrow=1, ncol=0))
+
+
+for (ntree in c(seq(250,2500,250))){
+    rf_cv <- randomForest(factor(y_train_cv)~., data=cv_train_df, mtry=max_features_star, ntree=ntree)
+    #predict for CV
+    y_pred_cv <- predict(rf_cv, newdata=cv_test_df, "prob")
+    
+    #assess fit using AUC.
+    rf_cv_auc <- round(auc(y_test_cv, y_pred_cv[,2]), 4)
+    
+    key2 <- toString(ntree)
+    
+    print(key2)
+    
+    modellist[key2] <- rf_cv_auc
+}
+
+param_tune_rf <- colnames(modellist)[max.col(modellist)]
+
+ntrees_star <- as.numeric(param_tune_rf)
+
+#fit tuned model on all training data. 
+
+rf <- randomForest(factor(y_train)~., data=train_df, mtry=max_features_star, ntree=ntrees_star)
+
+#predictions from tuned model.
+
+predictions_rf <- predict(rf, newdata=X_test, "prob")
+
+#classify delays according to most likely case p>0.5. 
+
+y_hat_rf <- ifelse(predictions_rf[,2]>0.5, 1,0)
+
+#Confusion Matrix 
+
+table(y_test, y_hat_rf)
+
+cm_rf  <- data.frame(table('True'=y_test,'Predicted'=as.double(y_hat_rf)))
+cm_rf  <- cm_rf %>% group_by(Predicted) %>% mutate(Predicted_pct = Freq/sum(Freq))
+
+plt_18 <- ggplot(data = cm_rf, mapping = aes(x = ordered(True,c(1,0)), y = Predicted, fill=Predicted_pct)) +  geom_tile() + geom_text(aes(label=round(Predicted_pct,2)),col='white') + xlab('True') + labs(x="True",y="Predicted", title="Confusion Matrix: Random Forest") + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.position = 'none') + scale_x_discrete(labels=c('Delayed', 'Non-delayed')) + scale_y_discrete(labels=c('Non-delayed', 'Delayed'))
+
+#store randomforest rates
+true_pos['rf'] <- cm_rf[4, 'Predicted_pct']
+false_neg['rf'] <- cm_rf[2, 'Predicted_pct']
+true_neg['rf'] <- cm_rf[1, 'Predicted_pct']
+
+#Accuracy. 
+
+hit_avg_rf <- mean(y_hat_rf != y_test)
+rf_acc <- 1-hit_avg_rf
+
+#store accuracy.
+acc['rf'] <- rf_acc
+
+#performance changing the decision boundary, true positive vs. false positive, ROC.
+
+rf_roc <- roc(y_test, predictions_rf[,2])
+
+#performance of the prediction sample distributions.
+
+rf_auc <- round(auc(y_test, predictions_rf[,2]),4)
+
+auc['rf'] <- rf_auc
+
+#Most important predictors.
+
+rf_predictors <- rf$importance/max(rf$importance)
+
+Top5['rf'] <- names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix[1:5], 1])
+
+#Top 5 most important origins.
+
+top5_Origins['rf'] <- names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix,1][grepl('Origin', names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix, 1]))])[1:5]
+
+#Top 5 most important destinations
+
+top5_Dests['rf'] <- names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix,1][grepl('Dest', names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix, 1]))])[1:5]
+
+#Top 5 most important carriers.
+
+top5_Carriers['rf'] <- names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix,1][grepl('IATA', names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix, 1]))])[1:5]
+
+#Top 5 most important flight and weather characteristics.
+
+top5_flight_features['rf'] <- names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix,1][!(grepl('Dest', names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix, 1])) | (grepl('Origin', names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix, 1]))) | (grepl('IATA', names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix, 1]))) | (grepl('Intercept', names(rf_predictors[sort(rf_predictors, decreasing=TRUE, index.return=TRUE)$ix, 1]))))])[1:5]
+
+
+                                                                                          
+#GBM. Cross-validate and tune the learning rate, number of trees, and tree depth. I tune manually due to computational limitations, but would otherwise prefer to grid search.
+
+modellist <- data.frame(matrix(NA, nrow=1, ncol=0))
+
+for (learning_rate in seq(0.01, 1,0.05)){
+    gbm_cv <- gbm(y_train_cv~., data=cv_train_df, distribution = 'bernoulli', shrinkage=learning_rate)
+    
+    #predict for CV
+    y_pred_cv <- predict(gbm_cv, newdata=X_test_cv, type="response")
+    #assess fit using AUC.
+    gbm_cv_auc <- round(auc(y_test_cv, y_pred_cv), 4)
+    
+    key1 <- toString(learning_rate)
+    
+    print(key1)
+    
+    modellist[key1] <- gbm_cv_auc
+}
+
+param_tune_gbm <- colnames(modellist)[max.col(modellist)]
+
+learning_rate_star <- as.numeric(param_tune_gbm)
+
+modellist <- data.frame(matrix(NA, nrow=1, ncol=0))
+
+for (max_depth in seq(1,40,4)){
+    gbm_cv <- gbm(y_train_cv~., data=cv_train_df, distribution = 'bernoulli', interaction.depth = max_depth, shrinkage=learning_rate_star)
+    
+    #predict for CV
+    y_pred_cv <- predict(gbm_cv, newdata=X_test_cv, type="response")
+    
+    #assess fit using AUC.
+    gbm_cv_auc <- round(auc(y_test_cv, y_pred_cv), 4)
+    
+    key2 <- toString(max_depth)
+    
+    print(key2)
+    
+    modellist[key2] <- gbm_cv_auc
+}
+
+param_tune_gbm <- colnames(modellist)[max.col(modellist)]
+
+max_depth_star <- as.numeric(param_tune_gbm)
+
+modellist <- data.frame(matrix(NA, nrow=1, ncol=0))
+
+for (ntree in c(seq(250,2500,250))){
+    gbm_cv <- gbm(y_train_cv~., data=cv_train_df, distribution = 'bernoulli', n.trees=ntree, interaction.depth = max_depth_star, shrinkage=learning_rate_star)
+    
+    #predict for CV
+    y_pred_cv <- predict(gbm_cv, newdata=X_test_cv, type="response")
+    #assess fit using AUC.
+    gbm_cv_auc <- round(auc(y_test_cv, y_pred_cv), 4)
+    
+    key3 <- toString(ntree)
+
+    print(key3)
+    
+    modellist[key3] <- gbm_cv_auc
+}
+
+param_tune_gbm <- colnames(modellist)[max.col(modellist)]
+
+ntrees_star <- as.numeric(param_tune_gbm)
+
+rm(modellist)
+
+#fit tuned model on all training data.
+
+gbm <- gbm(y_train ~ ., data=train_df, distribution = 'bernoulli', shrinkage=learning_rate_star, n.trees=ntrees_star, interaction.depth=max_depth_star)
+
+#predictions from tuned model
+
+predictions_gbm <- predict(gbm, newdata=X_test, type="response")
+
+#classify delays according to most likely case p>0.5. 
+
+y_hat_gbm <- ifelse(predictions_gbm>0.5, 1,0)
+
+#Confusion Matrix 
+
+table(y_test, y_hat_gbm)
+
+cm_gbm  <- data.frame(table('True'=y_test,'Predicted'=as.double(y_hat_gbm)))
+cm_gbm  <- cm_gbm %>% group_by(Predicted) %>% mutate(Predicted_pct = Freq/sum(Freq))
+
+plt_19 <- ggplot(data = cm_gbm, mapping = aes(x = ordered(True,c(1,0)), y = Predicted, fill=Predicted_pct)) +  geom_tile() + geom_text(aes(label=round(Predicted_pct,2)),col='white') + xlab('True') + labs(x="True",y="Predicted", title="Confusion Matrix: Boosting") + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.position = 'none') + scale_x_discrete(labels=c('Delayed', 'Non-delayed')) + scale_y_discrete(labels=c('Non-delayed', 'Delayed'))
+
+#store gbm rates
+true_pos['gbm'] <- cm_gbm[4, 'Predicted_pct']
+false_neg['gbm'] <- cm_gbm[2, 'Predicted_pct']
+true_neg['gbm'] <- cm_gbm[1, 'Predicted_pct']
+
+#Accuracy. 
+
+hit_avg_gbm <- mean(y_hat_gbm != y_test)
+gbm_acc <- 1-hit_avg_gbm
+
+#store accuracy.
+acc['gbm'] <- gbm_acc
+
+#performance changing the decision boundary, true positive vs. false positive, ROC.
+
+gbm_roc <- roc(y_test, predictions_gbm)
+
+#performance of the prediction sample distributions.
+
+gbm_auc <- round(auc(y_test, predictions_gbm),4)
+
+auc['gbm'] <- gbm_auc
+
+#plot ROCs
+
+roclist <- list('Random Forest' = rf_roc, 'GBM'=gbm_roc)
+
+plt_20 <- ggroc(roclist, size = 1, legacy.axes = TRUE, method = "linetype") + ggtitle('ROC Curves: Random Forest and GBM') + labs(y='Sensitivity', x='1-Specificity', linetype='Method', color='Baseline') + geom_point(aes(x=0,y=1, color='Perfect predictor')) +  geom_abline(aes(slope=1,intercept=0, color='Random guess')) + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.title.align = 0.5) + annotate("text", x=0.75, y=0.4, label=paste0('Random Forest ', 'AUC = ', rf_auc), size = 4) + annotate("text", x=0.75, y=0.3, label=paste0('GBM ', 'AUC = ', gbm_auc), size = 4)
+
+
+#Most important predictors.
+
+rf_predictors <- rf$importance/max(rf$importance)
+
+gbm_predictors <- summary(gbm, plotit = FALSE)
+gbm_predictors[,2] <- gbm_predictors[,2] / max(gbm_predictors[,2])
+
+Top5['gbm'] <- gbm_predictors[sort(gbm_predictors[,2], decreasing=TRUE, index.return=TRUE)$ix[1:5], 1]
+
+#Top 5 most important origins.
+
+top5_Origins['gbm'] <- gbm_predictors[grepl('Origin', gbm_predictors$var),][sort(gbm_predictors[grepl('Origin', gbm_predictors$var),2], decreasing=TRUE, index.return=TRUE)$ix[1:5], 1]
+
+#Top 5 most important destinations
+
+top5_Dests['gbm'] <- gbm_predictors[grepl('Dest', gbm_predictors$var),][sort(gbm_predictors[grepl('Dest', gbm_predictors$var),2], decreasing=TRUE, index.return=TRUE)$ix[1:5], 1]
+
+#Top 5 most important carriers.
+
+top5_Carriers['gbm'] <- gbm_predictors[grepl('IATA', gbm_predictors$var),][sort(gbm_predictors[grepl('IATA', gbm_predictors$var),2], decreasing=TRUE, index.return=TRUE)$ix[1:5], 1]
+
+
+#Top 5 most important flight and weather characteristics.
+
+
+top5_flight_features['gbm'] <- gbm_predictors[!(grepl('Dest', gbm_predictors$var) | (grepl('Origin', gbm_predictors$var)) | (grepl('IATA', gbm_predictors$var)) | (grepl('Intercept', gbm_predictors$var))),][sort(gbm_predictors[!(grepl('Dest', gbm_predictors$var) | (grepl('Origin', gbm_predictors$var)) | (grepl('IATA', gbm_predictors$var)) | (grepl('Intercept', gbm_predictors$var))),2], decreasing=TRUE, index.return=TRUE)$ix[1:5], 1]
+
+
+```
+
+```{r random_forest_plt_1, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_18
+```
+
+```{r gbm_plt_1, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_19
+```
+
+```{r randomforest_gbm_plt_2, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_20
+```
+<br> 
+
+Comments on performance. 
+```{r all_models_ROC, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+roclist <- list('Logit' = logit_roc, 'Lasso' = lasso_roc, 'Ridge' = ridge_roc, 'Elastic Net' = elnet_roc,  'Random Forest' = rf_roc, 'GBM'=gbm_roc)
+
+plt_22 <- ggroc(roclist, size = 1, legacy.axes = TRUE, method = "linetype") + ggtitle('ROC Curves: All Models') + labs(y='Sensitivity', x='1-Specificity', linetype='Method', color='Baseline') + geom_point(aes(x=0,y=1, color='Perfect predictor')) +  geom_abline(aes(slope=1,intercept=0, color='Random guess')) + theme(plot.title = element_text(size=14, face="bold", hjust = 0.5)) + theme(legend.title.align = 0.5) + annotate("text", x=0.75, y=0.4, label=paste0('Logit ', 'AUC = ', logit_auc), size = 3) + annotate("text", x=0.75, y=0.35, label=paste0('Lasso ', 'AUC = ', lasso_auc), size = 3) + annotate("text", x=0.75, y=0.3, label=paste0('Ridge ', 'AUC = ', ridge_auc), size = 3) + annotate("text", x=0.75, y=0.25, label=paste0('Elastic Net ', 'AUC = ', elnet_auc), size = 3) + annotate("text", x=0.75, y=0.2, label=paste0('RandomForest ', 'AUC = ', rf_auc), size = 3) + annotate("text", x=0.75, y=0.15, label=paste0('GBM ', 'AUC = ', gbm_auc), size = 3) 
+
+```
+
+```{r all_models_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+plt_22
+```
+
+```{r all_models_rates_table, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+logit_df <- c(true_pos['logit'][[1]], true_neg['logit'][[1]], false_neg['logit'][[1]], acc['logit'][[1]])
+lasso_df <- c(true_pos['lasso'][[1]], true_neg['lasso'][[1]], false_neg['lasso'][[1]], acc['lasso'][[1]])
+ridge_df <- c(true_pos['ridge'][[1]], true_neg['ridge'][[1]], false_neg['ridge'][[1]], acc['ridge'][[1]])
+elnet_df <- c(true_pos['elnet'][[1]], true_neg['elnet'][[1]], false_neg['elnet'][[1]], acc['elnet'][[1]])
+rf_df <- c(true_pos['rf'][[1]], true_neg['rf'][[1]], false_neg['rf'][[1]], acc['rf'][[1]])
+gbm_df <- c(true_pos['gbm'][[1]], true_neg['gbm'][[1]], false_neg['gbm'][[1]], acc['gbm'][[1]])
+
+rates_df <- data.frame(logit_df, lasso_df, ridge_df, elnet_df, rf_df, gbm_df)
+
+colnames(rates_df) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
+
+rownames(rates_df) <- c("True Positive", "True Negative", "False Negative", "Accuracy")
+
+rates_df <- data.frame(apply(rates_df, 2, function(x) as.numeric(as.character(x))))
+
+rates_df <- rates_df %>% mutate_if(is.numeric, round, digits = 3)
+
+xtable(rates_df)
+
+print(xtable(rates_df), include.rownames=TRUE, include.colnames=TRUE)
+
+```
+
+```{r all_models_most_important_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+
+colnames(Top5) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
+
+rownames(Top5) <- c("1", "2", "3", "4", "5")
+
+xtable(Top5)
+
+print(xtable(Top5), include.rownames=TRUE, include.colnames=TRUE)
+```
+
+```{r all_models_most_airlines_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+colnames(top5_Carriers) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
+
+rownames(top5_Carriers) <- c("1", "2", "3", "4", "5")
+
+#remove preamble to give just carrier IATA code.
+
+top5_Carriers <- data.frame(apply(top5_Carriers, 2, function(x) gsub("IATA\\_CODE\\_Reporting\\_Airline", "",x)))
+
+xtable(top5_Carriers)
+
+rates_df <- rates_df %>% mutate_if(is.numeric, round, digits = 3)
+print(xtable(top5_Carriers), include.rownames=TRUE, include.colnames=TRUE)
+```
+
+```{r all_models_most_origins_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+colnames(top5_Origins) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
+
+rownames(top5_Origins) <- c("1", "2", "3", "4", "5")
+
+xtable(top5_Origins)
+
+print(xtable(top5_Origins), include.rownames=TRUE, include.colnames=TRUE)
+```
+
+```{r all_models_most_dest_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+colnames(top5_Dests) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
+
+rownames(top5_Dests) <- c("1", "2", "3", "4", "5")
+
+xtable(top5_Dests)
+
+print(xtable(top5_Dests), include.rownames=TRUE, include.colnames=TRUE)
+```
+
+```{r all_models_most_flight characteristics_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
+colnames(top5_flight_features) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
+
+rownames(top5_flight_features) <- c("1", "2", "3", "4", "5")
+
+xtable(top5_flight_features)
+
+print(xtable(top5_flight_features), include.rownames=TRUE, include.colnames=TRUE)
+```
+
+\subsection{Conclusion}
+
+```{r conclusion, echo=FALSE, warning=FALSE}
+
+#The best performing model.
+#Error rate, false positive rate, and true positive rate.
+#That...performs better than...is unsurprising in this context as the dataset appears to exhibit nonlinear dependence; in particular, 'creeping delays', that result from the interaction of several factors that contribute to delays, are likely prevalent in the dataset.
+
+#The most relevant feature in the best performing model is...
+#The top 5 most relevant features in the best performing model are...
+
+#Sparsity in the data picked up by shrinkage methods.
+
+#How does this finding compare to the other models. 
+
+#Is this robust to imputed precipitation?
+
+
+#mean( df_cv$class == (gb_pred>1/2) )
+
+```
+
+Happy flying.

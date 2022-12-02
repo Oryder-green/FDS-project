@@ -18,3 +18,13 @@ Should use data from summer month...also miss out on data for summer months
 with high passenger numbers.
 
 Robustness check. Rerun on the best models when excluding imputed precipitation.
+
+Top5 predictors, absolute values because we want to the most important 
+
+
+Evaluation: 
+
+Top5 variables have positive and negative effects on probabilities, worth further
+investigation into the direction of their effect. (Summary table).
+
+Robust to imputation. Compare errors.

@@ -66,7 +66,7 @@
 \title{Final Project: Predicting US Flight Delays using Flight
 Characteristics and Weather Data}
 \author{Oliver Ryder-Green}
-\date{2022-11-26}
+\date{2022-11-27}
 
 \begin{document}
 \maketitle
@@ -91,10 +91,8 @@ the US from 2016 to 2019 cost passengers US\$62.6billion in total. Short
 of relying on airlines to inform them of expected delays, there is
 little that US passengers can do to reliably avoid flight delays.
 Therefore, I apply the classification methods discussed in class to
-determine which factors best inform flight departure delays for domestic
-flights in the US. I also use regression methods discussed in class to
-consider the extent to which these factors are able to predict the
-length of departure delays that passengers experience.\\
+determine which factors inform flight departure delays for domestic
+flights in the US.\\
 
 Data from the \textit{Bureau of Transportation Statistics} illustrates
 the prevalence of domestic flight delays. Among all US carriers, between
@@ -138,19 +136,18 @@ anticipate delays.
 \newpage 
 \section{Data}
 
-To identify factors that inform whether a flight is delayed on departure
-and for how long, I use data from the
+To identify factors that inform whether a flight is delayed on
+departure, I use data from the
 \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/}
 for January, March, September, and December in 2016, 2017, and 2018,
-respectively. The flight data contains 8777 observations on US domestic
-flights and 22 features, such as the flight date, origin airport,
+respectively. The flight data contains 8,777 observations on US domestic
+flights and 21 features, such as the flight date, origin airport,
 carrier, destination, distance, and other flight level characteristics.
 I combine this data with weather data from
 \textit{Weather Underground}\footnote{www.wunderground.com}. The weather
 data contains weather observations, such as average temperature,
 precipitation, and maximum wind speed, from corresponding airport
-weather stations on flight departure dates. The merged dataset contains
-2687 observations and 28 features.
+weather stations on flight departure dates.
 
 \subsection{Compiling and Cleaning}
 
@@ -161,9 +158,9 @@ I manually download
 for January, March, September, and December in 2016, 2017, and 2018,
 respectively. I import the data and compile using Pandas in Python (see
 corresponding Jupyter NB). The resulting dataset has 5,851,068
-observations and 22 features. To make the dataset manageable, I draw a
+observations and 21 features. To make the dataset manageable, I draw a
 random subset (fraction=0.0015) from each month-year sample. The
-resulting dataset contains 8777 observations.
+resulting dataset contains 8,777 observations.
 
 \subsubsection{Weather Data}
 
@@ -173,17 +170,17 @@ airport codes corresponding to origin airports for departures in the
 flight data to scrape historical weather data from airport weather
 stations. I acquire observations on temperatures, precipitation, sea
 level pressure, and max wind speed on the date of departure. The
-resulting dataset contains 6190 observations.
+resulting dataset contains 6,190 observations.
 
 \subsubsection{Merged Data}
 
 I merge the flight and weather data on the date of departure and origin
 airport code. For the flight data, delays are identified as any flight
 departing more than 15 minutes late: \texttt{DepDel15=1} if delayed and
-\texttt{DepDel15=0} if otherwise. Delays measured in minutes are given
-by \texttt{DepDelay}. Since the supervised learning methods I utilise
-rely on the assumption that \textbf{target variables} do not have
-missing values, I drop observations if both \texttt{DepDel15} and
+\texttt{DepDel15=0} otherwise. Delays measured in minutes are given by
+\texttt{DepDelay}. Since the supervised learning methods I utilise rely
+on the assumption that \textbf{target variables} do not have missing
+values, I drop observations if both \texttt{DepDel15} and
 \texttt{DepDelay} are missing because such observations contain no
 useful information for the analysis.
 
@@ -191,22 +188,106 @@ Since I am interested in predicting delays and delay lengths using
 flight characteristics and weather observations, I consider the
 proportion of missing values for these predictor variables. I find that
 there are no missing observations in the flight data. However, around
-70\% of observations have missing values for \texttt{Day Average Temp},
-\texttt{High Temp}, \texttt{Low Temp}, \texttt{Max Wind Speed}, and
-\texttt{Sea Level Pressure} (see Jupyter NB). Moreover, around 90\% of
+70\% of observations have missing values for \texttt{Day.Average.Temp},
+\texttt{High.Temp}, \texttt{Low.Temp}, \texttt{Max.Wind.Speed}, and
+\texttt{Sea.Level.Pressure} (see Jupyter NB). Moreover, around 90\% of
 observations have missing values for \texttt{Precipitation}. Dropping
 observations missing weather data is costly in terms of observations.
 Yet, the weather data is of interest in prediction and is likely
 independent of many flight characteristics. I choose to omit
-observations that have missing values for \texttt{Day Average Temp},
-\texttt{High Temp}, \texttt{Low Temp}, \texttt{Max Wind Speed}, and
-\texttt{Sea Level Pressure}. Further omitting observations that have
-missing values for precipitation is very costly.
+observations that have missing values for \texttt{Day.Average.Temp},
+\texttt{High.Temp}, \texttt{Low.Temp}, \texttt{Max.Wind.Speed}, and
+\texttt{Sea.Level.Pressure}.\\
+
+Further omitting observations that have missing values for precipitation
+may be discarding useful information: the correlation between
+\texttt{DepDel15} and \texttt{Precipitation} (0.059) and between
+\texttt{DepDelay} and \texttt{Precipitation} (0.026) are both
+non-negligible, and; mean precipitation is higher for delayed departures
+(0.446 inches) than for non-delayed departures (0.342 inches). Since
+\texttt{Precipitation} is correlated with other weather observations, I
+choose to impute missing values for \texttt{Precipitation} using
+k-Nearest Neighbours on weather data. I optimise parameter \(k\) by
+choosing \(k \in (0,100)\) to minimise the average MSE for in-sample
+prediction across 50 random sub-samples of complete weather data (see
+Jupyter NB). I impute missing values for \texttt{Precipitation} in the
+merged dataset using \(k^*=2\). The resulting dataset has 2,693
+observations and 27 features.
 
 \subsection{Feature Engineering}
 
+There is structure in the data that may be useful to exploit. For
+instance, the data already splits flight dates into \texttt{Month},
+\texttt{DayofMonth}, and \texttt{DayofWeek}, which may be relevant in
+predicting flight delays if, for example, weekend flights are more prone
+to delays. In a similar vein, I re-code \texttt{DepTimeBlk}, which gives
+the astronomical time interval in which a departure is scheduled, as a
+factor variable to be used in prediction. I likewise re-code
+\texttt{ArrTimeBlk}. The variables \texttt{CRSDepTime} and
+\texttt{CRSArrTime} give the scheduled departure and arrival times of a
+flight in astronomical time. I find the difference in minutes between
+scheduled departure and arrival times to categorise scheduled flight
+lengths by hour in \texttt{SchFlTm}. The variable \texttt{Distance}
+gives the flight distance in miles, I categorise flights by distance in
+\texttt{DistGr} in intervals of 500 miles. I assign \texttt{InSt=1} if a
+flight is within state and \texttt{InSt=0} otherwise using
+\texttt{OriginStateName} and \texttt{DestStateName}. Finally, I use a
+stricter definition of a departure delay than that of \texttt{DepDel15}.
+I assign \texttt{Delayed=1} if \texttt{DepDelay>0} and
+\texttt{Delayed=0} otherwise. The dataset used for the analysis contains
+2,685 observations and 31
+features\footnote{Note: I remove \texttt{Flights}, which gives the number of flights per flight journey, since it is equal to one for all observations and therefore containts no useful information.}.
+
 \subsection{Summary}
 
-\includegraphics{Visualisation_Analysis_files/figure-latex/summary-1.pdf}
+In the data, the balance of departure delays is:
+
+\begin{center}\includegraphics{Visualisation_Analysis_files/figure-latex/delay_plt-1} \end{center}
+
+\newpage
+
+The distribution of departure delay lengths
+is\footnote{Early departures have negative delay lengths.}:
+
+\begin{center}\includegraphics{Visualisation_Analysis_files/figure-latex/length_plt-1} \end{center}
+
+I consider the features that may be useful in distinguishing between
+delayed and non-delayed flights. Delayed flights tend to have longer
+scheduled flight times:
+
+\begin{center}\includegraphics{Visualisation_Analysis_files/figure-latex/features_plt_6-1} \end{center}
+\newpage
+
+Accordingly, delayed flights tend to have greater flight distances:
+
+\begin{center}\includegraphics{Visualisation_Analysis_files/figure-latex/features_plt_7-1} \end{center}
+
+Delayed flights tend to be scheduled to depart at later in the day:
+
+\begin{center}\includegraphics{Visualisation_Analysis_files/figure-latex/features_plt_8-1} \end{center}
+\newpage
+
+Delayed flights also tend to be scheduled to depart at later in the week
+(i.e., Thursday and Friday):
+
+\begin{center}\includegraphics{Visualisation_Analysis_files/figure-latex/features_plt_9-1} \end{center}
+
+Flight delays appear to coincide somewhat more frequently with colder
+weather:
+
+\begin{center}\includegraphics{Visualisation_Analysis_files/figure-latex/features_plt_10-1} \end{center}
+\newpage
+
+Flight delays appear to coincide somewhat more frequently with more
+adverse
+weather\footnote{note: the upper tails for \texttt{Max.Wind.Speed} and \texttt{Precipitation} belong to the distributions for delayed flights.}:
+
+\begin{center}\includegraphics{Visualisation_Analysis_files/figure-latex/features_plt_11-1} \end{center}
+
+\subsection{Methodology and Results}
+
+\subsection{Conclusion}
+
+Happy flying.
 
 \end{document}
