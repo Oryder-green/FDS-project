@@ -165,12 +165,12 @@ The \textit{Bureau of Transportation Statistics} data also highlights that the f
 ```
 <br>
 
-Several factors may determine whether or not a flight is delayed and for how long. The confluence of certain factors may also make delays more likely or lengthy. Moreover, some factors are hard to observe or nearly impossible to predict. The task of anticipating delays is, therefore, extremely difficult for passengers. That said, the data above suggests that some features that are readily observable for passengers may be useful in avoiding delays. If passengers face a choice of carriers and origin airports, they may be better able to avoid costly delays by choosing those that feature less frequent and shorter delays. The aim of this analysis is to identify factors that passengers might use to anticipate delays.
+The task of anticipating delays is extremely difficult for passengers. Many factor are hard to observe or nearly impossible to predict. That said, the data above suggests that some readily observable features may be useful for passengers trying to avoid delays. For instance, if passengers face a choice of carriers, they may be better able to avoid costly delays by choosing those that exhibit less frequent and shorter delays. The aim of this analysis is to identify such features that passengers might use to anticipate delays.
 
 \newpage 
 \section{Data}
 
-To identify factors that inform whether a flight is delayed on departure, I use data from the \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/} for January, March, September, and December in 2016, 2017, and 2018, respectively. The flight data contains 8,777 observations on US domestic flights and 21 features, such as the flight date, origin airport, carrier, destination, distance, and other flight level characteristics. I combine this data with weather data from \textit{Weather Underground}\footnote{www.wunderground.com}. The weather data contains weather observations, such as average temperature, precipitation, and maximum wind speed, from corresponding airport weather stations on flight departure dates.
+To identify factors that inform whether a flight is delayed on departure, I use data from the \textit{Bureau of Transportation Statistics' Airline On-Time Performance Data}\footnote{www.transtats.bts.gov/} for January, March, September, and December in 2016, 2017, and 2018, respectively. The flight data contains 8,777 observations on US domestic flights and 21 features, such as the flight date, origin airport, carrier, destination, distance, and other flight level characteristics. I combine this data with weather data from \textit{Weather Underground}\footnote{www.wunderground.com}. The weather data contains weather observations from corresponding airport weather stations on flight departure dates.
 
 \subsection{Compiling and Cleaning}
 
@@ -192,7 +192,7 @@ Further omitting observations that have missing values for precipitation may be 
 
 \subsection{Feature Engineering}
 
-There is structure in the data that may be useful to exploit. For instance, the data already splits flight dates into \texttt{Month}, \texttt{DayofMonth}, and \texttt{DayofWeek}, which may be relevant in predicting flight delays if, for example, weekend flights are more prone to delays. In a similar vein, I re-code \texttt{DepTimeBlk}, which gives the astronomical time interval in which a departure is scheduled, as a factor variable to be used in prediction. I likewise re-code \texttt{ArrTimeBlk}. The variables \texttt{CRSDepTime} and \texttt{CRSArrTime} give the scheduled departure and arrival times of a flight in astronomical time. I find the difference in minutes between scheduled departure and arrival times to categorise scheduled flight lengths by hour in \texttt{SchFlTm}. The variable \texttt{Distance} gives the flight distance in miles, I categorise flights by distance in \texttt{DistGr} in intervals of 500 miles. I assign \texttt{InSt=1} if a flight is within state and \texttt{InSt=0} otherwise using \texttt{OriginStateName} and \texttt{DestStateName}. Finally, I use a stricter definition of a departure delay than that of \texttt{DepDel15}. I assign \texttt{Delayed=1} if \texttt{DepDelay>0} and \texttt{Delayed=0} otherwise. The dataset used for the analysis contains 2,685 observations and 31 features\footnote{Note: I remove \texttt{Flights}, which gives the number of flights per flight journey, since it is equal to one for all observations and therefore containts no useful information.}. 
+There is structure in the data that may be useful to exploit. For instance, the data already splits flight dates into \texttt{Month}, \texttt{DayofMonth}, and \texttt{DayofWeek}, which may be relevant in predicting flight delays if, for example, weekend flights are more prone to delays. In a similar vein, I re-code \texttt{DepTimeBlk}, which gives the astronomical time interval in which a departure is scheduled, as a factor variable to be used in prediction. I likewise re-code \texttt{ArrTimeBlk}. The variables \texttt{CRSDepTime} and \texttt{CRSArrTime} give the scheduled departure and arrival times of a flight in astronomical time. I find the difference in minutes between scheduled departure and arrival times to categorise scheduled flight lengths by hour in \texttt{SchFlTm}. The variable \texttt{Distance} gives the flight distance in miles, I categorise flights by distance in \texttt{DistGr} in intervals of 500 miles. I assign \texttt{InSt=1} if a flight is within state and \texttt{InSt=0} otherwise using \texttt{OriginStateName} and \texttt{DestStateName}. Finally, I use a stricter definition of a departure delay than that of \texttt{DepDel15}. I assign \texttt{Delayed=1} if \texttt{DepDelay>0} and \texttt{Delayed=0} otherwise. The dataset used for the analysis contains 2,685 observations and 31 features\footnote{Note: I remove \texttt{Flights}, which gives the number of flights per flight journey, since it is equal to one for all observations and therefore contains no useful information.}. 
 
 
 ```{r feature engineering, echo=FALSE, include=FALSE, warning=FALSE}
@@ -352,14 +352,14 @@ rm(data_features, long_scaled_data_other, long_scaled_data_temp, scaled_data, sc
 
 ```
 
-In the data, the balance of departure delays is:
+In the data, the balance of departure delays is\footnote{Note: delays are not rare, so I do not face a class imbalance problem.}
 <br>
 ```{r delay_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
 plt_4
 ```
 
 \newpage
-The distribution of departure delay lengths is\footnote{Early departures have negative delay lengths.}:
+The distribution of departure delay lengths is\footnote{Note: early departures have negative delay lengths.}:
 <br>
 ```{r length_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
 plt_5
@@ -402,7 +402,7 @@ Flight delays appear to coincide somewhat more frequently with more adverse weat
 plt_11
 ```
 
-```{r prediction_GLM_Logit, echo=FALSE, include=FALSE, warning=FALSE}
+```{r prediction_GLM_Logit, echo=FALSE, include=FALSE, warning=FALSE, cache = TRUE}
 
 #Move FlightDate and Delay to front of dataframe
 
@@ -568,7 +568,7 @@ top5_flight_features['logit'] <- logit_top5_flight_features
 
 \subsection{Methodology and Results}
 
-The task is to identify important predictors of flight delays. To this end, I use supervised methods that are able to classify (i.e., predict) delayed and non-delayed flights. I compare Logit, Lasso, Ridge, Elastic Net, Random Forest, and Boosting methods. I consider the performance of these methods and the top 5 most important predictors of flight delays they each identify. I also consider the top 5 airlines, origins, destinations, and top flight and weather features the methods identify.\
+To identify important predictors of flight delays, I use supervised methods that are able to classify (i.e., predict) delayed and non-delayed flights. I compare Logit, Lasso, Ridge, Elastic Net, Random Forest, and Boosting methods. I consider the performance of these methods and the top 5 most important predictors of flight delays they each identify. I also consider the top 5 airlines, origins, destinations, and top flight and weather features the methods identify.\
 
 Since passengers likely wish to avoid costly delays, the performance of the methods is evaluated using the true positive and false negative rates of prediction. Accordingly, I cross-validate the fit of models using the AUC as the performance metric. Moreover, since passengers presumably wish to take their intended flight, I assess the methods using false positive rates. Finally, I consider the accuracy of prediction since a given passenger would wish to know whether a given flight is likely to be delayed. \
 
@@ -582,7 +582,7 @@ plt_12
 ```{r logit_plt_2, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
 plt_13
 ```
-```{r prediction_LASSO_RIDGE_ELNET, echo=FALSE, warning=FALSE}
+```{r prediction_LASSO_RIDGE_ELNET, echo=FALSE, warning=FALSE, cache = TRUE}
 
 #Use split train/test data.
 
@@ -771,7 +771,8 @@ top5_flight_features['elnet'] <- elnet_predictors[!(grepl('Dest', elnet_predicto
 
 ```
 <br>
-The logit model performs relatively poorly at predicting delays; for instance, it assigns higher probabilities to delays over non-delays only marginally better than a random guess. Perhaps this is due to over-fitting on the training sample (i.e., the model delivers low bias in-sample but high variance out-of-sample). I therefore turn to shrinkage methods to strike a better bias-variance trade-off. In particular, I fit and cross-validate Lasso, Ridge, and Elastic Net models\footnote{Note: I tune shrinkage for Lasso (=`r lasso$lambda`), Ridge (=`r ridge$lambda`), and Elastic Net (= `r elnet$bestTune$lambda`). I tune sparsity for Elastic Net (= `r elnet$bestTune$alpha`).} that yield:
+The logit model performs relatively poorly at predicting delays; for instance, it assigns higher probabilities to delays over non-delays only marginally better than a random guess. Perhaps this is due to over-fitting on the training sample (i.e., the model delivers low bias in-sample but high variance out-of-sample). I therefore turn to shrinkage methods to strike a better bias-variance trade-off. In particular, I fit and cross-validate Lasso, Ridge, and Elastic Net models\footnote{Note: I tune shrinkage, $\lambda$, for Lasso (=`r lasso$lambda`), Ridge (=`r ridge$lambda`), and Elastic Net (= `r elnet$bestTune$lambda`). I tune sparsity, $\alpha$, for Elastic Net (= `r elnet$bestTune$alpha`).} that yield:
+
 ```{r lasso_plt_1, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
 plt_14
 ```
@@ -786,10 +787,8 @@ plt_16
 ```{r lasso_ridge_elnet_plt_2, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
 plt_17
 ```
-<br> 
-Evidently, prediction performance improves using shrinkage methods. In particular, Lasso, Ridge, and Elastic Net exhibit more desirable true positive and false positive rates; as a result, the respective AUCs are an improvement on logit. That said, false negative rates remain similar to logit. The possibility of 'creeping delays', caused by the interaction of features that increase the probability of a delay, suggest that non-linearities in the data may be an important aspect of prediction. I therefore turn to non-linear methods. I grow and prune a Random Forest\footnote{Note: I manually tune to optimise the maximum number of features (=`r rf$mtry`) and number of trees (=`r rf$ntree`).} and subsequently consider the predictive power of a consortium of \texit{weak learners} using cross-validated Gradient-based Minimisation ("GBM")\footnote{Note: I manually tune to optimise the learning rate (=`r gbm$shrinkage`), number of trees (= `r gbm$n.trees`), and tree depth (= `r gbm$interaction.depth`).}, which yield:
 
-```{r prediction_RF_Boost, echo=FALSE, warning=FALSE}
+```{r prediction_RF_Boost, echo=FALSE, warning=FALSE, cache = TRUE}
 
 #Split X_train into train and cv sample.
 
@@ -825,7 +824,7 @@ cv_test_df <- data.frame(X_test_cv)
 
 #Tune max features with default number of trees. 
 for (max_features in 1:ncol(X_train_cv)){
-    rf_cv <- randomForest(y_train_cv~., data=cv_train_df, mtry=max_features, ntree=500)
+    rf_cv <- randomForest(factor(y_train_cv)~., data=cv_train_df, mtry=max_features, ntree=500)
     #predict for CV
     y_pred_cv <- predict(rf_cv, newdata=cv_test_df, "prob")
     
@@ -1081,7 +1080,8 @@ top5_flight_features['gbm'] <- gbm_predictors[!(grepl('Dest', gbm_predictors$var
 
 
 ```
-
+Evidently, prediction performance improves using shrinkage methods. In particular, Lasso, Ridge, and Elastic Net exhibit more desirable true positive and false positive rates; as a result, the respective AUCs are an improvement on logit. That said, false negative rates remain similar to logit. The possibility of 'creeping delays', caused by the interaction of features that increase the probability of a delay, suggest that non-linearities in the data may be an important aspect of prediction. I therefore turn to non-linear methods. I grow and prune a Random Forest\footnote{Note: I manually tune to optimise the maximum number of features (=`r rf$mtry`) and number of trees (=`r rf$ntree`).} and subsequently consider the predictive power of a coalition of \textit{weak learners} using cross-validated Gradient-based Minimisation ("GBM")\footnote{Note: I manually tune to optimise the learning rate (=`r gbm$shrinkage`), number of trees (= `r gbm$n.trees`), and tree depth (= `r gbm$interaction.depth`).}, which yield:
+<br>
 ```{r random_forest_plt_1, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
 plt_18
 ```
@@ -1093,9 +1093,9 @@ plt_19
 ```{r randomforest_gbm_plt_2, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
 plt_20
 ```
-<br> 
+Non-linear models appear to offer no significant improvement on shrinkage methods. Random Forest, in particular, delivers the worst rate of prediction among the methods, despite having the best AUC. This is perhaps due to over-fitting on the data. That GBM outperforms Random Forest in prediction perhaps eludes to the fact that shrinkage methods are able to exploit sparsity in the training data to aid in prediction. \
 
-Comments on performance. 
+In summary, the fitted models yield: 
 ```{r all_models_ROC, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
 roclist <- list('Logit' = logit_roc, 'Lasso' = lasso_roc, 'Ridge' = ridge_roc, 'Elastic Net' = elnet_roc,  'Random Forest' = rf_roc, 'GBM'=gbm_roc)
 
@@ -1117,13 +1117,13 @@ gbm_df <- c(true_pos['gbm'][[1]], true_neg['gbm'][[1]], false_neg['gbm'][[1]], a
 
 rates_df <- data.frame(logit_df, lasso_df, ridge_df, elnet_df, rf_df, gbm_df)
 
-colnames(rates_df) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
-
-rownames(rates_df) <- c("True Positive", "True Negative", "False Negative", "Accuracy")
-
 rates_df <- data.frame(apply(rates_df, 2, function(x) as.numeric(as.character(x))))
 
 rates_df <- rates_df %>% mutate_if(is.numeric, round, digits = 3)
+
+colnames(rates_df) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
+
+rownames(rates_df) <- c("True Positive", "True Negative", "False Negative", "Accuracy")
 
 xtable(rates_df)
 
@@ -1143,13 +1143,14 @@ print(xtable(Top5), include.rownames=TRUE, include.colnames=TRUE)
 ```
 
 ```{r all_models_most_airlines_plt, echo=FALSE, fig.align='center', warning=FALSE, fig.height = 4, fig.width = 7}
-colnames(top5_Carriers) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
-
-rownames(top5_Carriers) <- c("1", "2", "3", "4", "5")
 
 #remove preamble to give just carrier IATA code.
 
 top5_Carriers <- data.frame(apply(top5_Carriers, 2, function(x) gsub("IATA\\_CODE\\_Reporting\\_Airline", "",x)))
+
+colnames(top5_Carriers) <- c("Logit", "Lasso", "Ridge", "Elastic Net", "Random Forest", "GBM")
+
+rownames(top5_Carriers) <- c("1", "2", "3", "4", "5")
 
 xtable(top5_Carriers)
 
@@ -1187,26 +1188,35 @@ xtable(top5_flight_features)
 print(xtable(top5_flight_features), include.rownames=TRUE, include.colnames=TRUE)
 ```
 
+
 \subsection{Conclusion}
 
-```{r conclusion, echo=FALSE, warning=FALSE}
-
-#The best performing model.
-#Error rate, false positive rate, and true positive rate.
-#That...performs better than...is unsurprising in this context as the dataset appears to exhibit nonlinear dependence; in particular, 'creeping delays', that result from the interaction of several factors that contribute to delays, are likely prevalent in the dataset.
-
-#The most relevant feature in the best performing model is...
-#The top 5 most relevant features in the best performing model are...
-
-#Sparsity in the data picked up by shrinkage methods.
-
-#How does this finding compare to the other models. 
-
-#Is this robust to imputed precipitation?
+The best performing method is Lasso. It delivers the highest true positive rate (`r true_pos['lasso'][[1]]`), the second-highest true negative rate (`r true_neg['lasso'][[1]]`), and the highest accuracy (`r acc['lasso'][[1]]`) among all methods. It identifies days of the month as being the most important predictors of flight delays. This is in contrast to Logit, Ridge, and Elastic Net, which select origins and destinations, and Random Forest and GBM, which select weather and flight features. That Lasso performs best in this context is unsurprising given the multiplicity of dummy variables generated by the features in the data. Many of the other models are likely over-fitting on the training data; Lasso mitigates this issue by exploiting sparsity\footnote{Note: that cross-validated Elastic Net chooses $\alpha$=`r elnet$bestTune$alpha` speaks to this fact.}. Evidently, predictions are noisy: the top 5 most relevant predictors by category are relatively unstable between models. I use a rudimentary distance metric\footnote{For each top 5 category, I count the frequency of unique predictors given by the models. If all models agree, there would be 5 variables each occuring 5 times. I calculate the difference between the actual frequency of the predictors and 5. Then I sum the squared-difference to calculate the metric, which punishes top 5 categories twofold, for: (1) models that disagree with each other, and (2) the extent to which models disagree.} to determine the stability of the predictions: 
 
 
-#mean( df_cv$class == (gb_pred>1/2) )
+```{r matches_Top5, echo=FALSE, warning=FALSE}
+
+#count occurrences 
+
+dfs <- c("Top5", "top5_Carriers", "top5_Origins", "top5_Dests", "top5_flight_features")
+
+stability <- data.frame(matrix(NA, nrow = 1, ncol = 0))
+
+#Euclidean distance metric from 5, for frequency of each predictor identified. 
+
+for (i in dfs){
+  
+occurrences <- data.frame(table(unlist(eval(str2lang(i)))))
+
+stability[i] <- sum((5-occurrences$Freq)*2)
+
+}
+
+colnames(stability) <- c("Top 5", "Top 5 Carriers", "Top 5 Origins", "Top 5 Destinations", "Top 5 Flight Features")
+rownames(stability) <- c("Distance Metric")
+
+print(xtable(stability), include.rownames=TRUE, include.colnames=TRUE)
 
 ```
 
-Happy flying.
+The most stable predictions across models are for which carriers are the most important in determining delays. This is perhaps unsurprising given the data presented above. A sensible choice for passengers might then be to avoid airlines with a history of delays. Happy flying!
